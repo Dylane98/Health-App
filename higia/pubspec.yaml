@@ -1,0 +1,26 @@
+name: higia
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+  - images/logo.png
+  - images/background1.png
+  - images/background2.png
+  - images/logo2.png
+  - images/sono.png
