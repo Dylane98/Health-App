@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:higia/atvDiaria.dart';
 import 'package:higia/motivacao.dart';
-
+import 'package:higia/dadosRegisto.dart';
 
 class Atvpreferida extends StatefulWidget {
-  const Atvpreferida({super.key});
+  final RegistrationData data;
+  const Atvpreferida({super.key, required this.data});
 
   @override
   State<Atvpreferida> createState() => _AtvpreferidaState();
@@ -12,21 +13,33 @@ class Atvpreferida extends StatefulWidget {
 
 class _AtvpreferidaState extends State<Atvpreferida> {
   // Se por algum motivo estiveres a usar bool? noutros sítios, isto protege.
-  bool? caminhadas;
-  bool? corrida;
-  bool? natacao;
-  bool? passadeira;
-  bool? outro;
+  late bool caminhadas;
+  late bool corrida;
+  late bool natacao;
+  late bool passadeira;
+  late bool outro;
 
   @override
   void initState() {
     super.initState();
-    // Inicializa explicitamente (evita qualquer null)
-    caminhadas = false;
-    corrida = false;
-    natacao = false;
-    passadeira = false;
-    outro = false;
+    caminhadas = widget.data.caminhadas;
+    corrida = widget.data.corrida;
+    natacao = widget.data.natacao;
+    passadeira = widget.data.passadeira;
+    outro = widget.data.atvOutro;
+  }
+
+  void _seguinte() {
+    widget.data.caminhadas = caminhadas;
+    widget.data.corrida = corrida;
+    widget.data.natacao = natacao;
+    widget.data.passadeira = passadeira;
+    widget.data.atvOutro = outro;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => Motivacao(data: widget.data)),
+    );
   }
 
   @override
@@ -61,35 +74,35 @@ class _AtvpreferidaState extends State<Atvpreferida> {
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Caminhadas'),
-                      value: caminhadas ?? false,
+                      value: caminhadas,
                       onChanged: (v) => setState(() => caminhadas = v ?? false),
                     ),
                     CheckboxListTile(
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Corrida'),
-                      value: corrida ?? false,
+                      value: corrida,
                       onChanged: (v) => setState(() => corrida = v ?? false),
                     ),
                     CheckboxListTile(
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Natação'),
-                      value: natacao ?? false,
+                      value: natacao,
                       onChanged: (v) => setState(() => natacao = v ?? false),
                     ),
                     CheckboxListTile(
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Passadeira'),
-                      value: passadeira ?? false,
+                      value: passadeira,
                       onChanged: (v) => setState(() => passadeira = v ?? false),
                     ),
                     CheckboxListTile(
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Outro'),
-                      value: outro ?? false,
+                      value: outro,
                       onChanged: (v) => setState(() => outro = v ?? false),
                     ),
                     SizedBox(height: 48),
@@ -97,29 +110,15 @@ class _AtvpreferidaState extends State<Atvpreferida> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.blue,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const atvDiaria()),
-                          );
-                        },
-                        child: const Text('Anterior'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const Motivacao()),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.blue
-                        ),
-                        child: const Text('Seguinte'),
-                      ),
+                      style: TextButton.styleFrom(foregroundColor: Colors.blue),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Anterior'),
+                    ),
+                    ElevatedButton(
+                      onPressed: _seguinte,
+                      style: ElevatedButton.styleFrom(foregroundColor: Colors.blue),
+                      child: const Text('Seguinte'),
+                    ),
                     ],
                   )
                 ],

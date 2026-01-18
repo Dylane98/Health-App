@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:higia/login.dart';
 import 'package:higia/registry.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://uhortitqkefkfppnfifw.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVob3J0aXRxa2Vma2ZwcG5maWZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4ODg5ODksImV4cCI6MjA4MTQ2NDk4OX0.IsMCivRAyJaBgsaV7LKdynJ01fuwxSArJZpXda28_-Y',
+  );
   runApp(const MainApp());
 }
 
@@ -23,8 +29,7 @@ class Homepage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      
+    return Scaffold(  
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -65,7 +70,7 @@ class Homepage extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const Registry()),
+                  MaterialPageRoute(builder: (_) => const RegisterPage()),
                 );
               },
               style: ElevatedButton.styleFrom(

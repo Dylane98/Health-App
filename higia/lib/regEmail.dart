@@ -1,23 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:higia/main.dart';
 import 'package:higia/menu.dart';
-
-void main() => runApp(const RegEmail());
-
-class RegEmail extends StatelessWidget {
-  const RegEmail({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: RegEmailPage(),
-    );
-  }
-}
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:higia/dadosRegisto.dart';
 
 class RegEmailPage extends StatefulWidget {
-  const RegEmailPage({super.key});
+  final RegistrationData data;
+  const RegEmailPage({super.key, required this.data});
 
   @override
   State<RegEmailPage> createState() => _RegEmailPageState();
@@ -30,6 +18,8 @@ class _RegEmailPageState extends State<RegEmailPage> {
   final _password = TextEditingController();
   final _confpassword = TextEditingController();
 
+  bool _guarda = false;
+
   @override
   void dispose() {
     _username.dispose();
@@ -39,45 +29,135 @@ class _RegEmailPageState extends State<RegEmailPage> {
     super.dispose();
   }
 
-  void _sucesso() {
+  void _sucesso(int idutilizador) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         title: const Text('Parabéns', textAlign: TextAlign.center),
-        content: const Text('Conta de utilizador criada com sucesso!', textAlign: TextAlign.center),
+        content: const Text(
+          'Conta de utilizador criada com sucesso!',
+          textAlign: TextAlign.center,
+        ),
         actionsAlignment: MainAxisAlignment.center,
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.push(
+              Navigator.pop(ctx);
+              Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => const Menu()),
+                MaterialPageRoute(
+                  builder: (_) => Menu(idutilizador: idutilizador),
+                ),
               );
             },
-            child: const Text('Ok', textAlign: TextAlign.center),
+            child: const Text('Ok'),
           ),
         ],
       ),
     );
   }
 
-  void _submit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      _sucesso();
-      _username.clear();
-      _email.clear();
-      _password.clear();
-      _confpassword.clear();
+  Future<void> _confirmarESalvar() async {
+    setState(() => _guarda = true);
+    final client = Supabase.instance.client;
+
+    try {
+      // 1) Inserir na tabela utilizador e obter o idutilizador gerado
+      final userRow = await client
+          .from('utilizador')
+          .insert(widget.data.utilizadorRow())
+          .select('idutilizador')
+          .single();
+
+      final int idUtilizador = userRow['idutilizador'] as int;
+
+      // 2) Inserir objetivos (tabela objetivo_utilizador) - N linhas
+      final objetivos = widget.data.objetivosIds();
+      if (objetivos.isNotEmpty) {
+        await client.from('objetivo_utilizador').insert(
+              objetivos
+                  .map((idObjetivo) => {
+                        'idutilizador': idUtilizador,
+                        'idobjetivo': idObjetivo,
+                        'Date': DateTime.now().toIso8601String(),
+                      })
+                  .toList(),
+            );
+      }
+
+      // 3) Inserir motivação (tabela motivacao_utilizador) - 1 linha
+      final idMotivacao = widget.data.idMotivacao();
+      if (idMotivacao != null) {
+        await client.from('motivacao_utilizador').insert({
+          'idutilizador': idUtilizador,
+          'idmotivacao': idMotivacao,
+          'Date': DateTime.now().toIso8601String(),
+        });
+      }
+
+      if (!mounted) return;
+      _sucesso(idUtilizador);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao guardar: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _guarda = false);
     }
+  }
+
+  void _submit() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final password = _password.text;
+    final confpassword = _confpassword.text;
+
+    if (password != confpassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('As passwords não coincidem')),
+      );
+      return;
+    }
+
+    widget.data.username = _username.text.trim();
+    widget.data.email = _email.text.trim();
+    widget.data.password = password;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirmar', textAlign: TextAlign.center),
+        content: const Text(
+          'Queres guardar os dados e criar a conta?',
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: _guarda
+                ? null
+                : () {
+                    Navigator.pop(ctx);
+                    _confirmarESalvar();
+                  },
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-      ),
+      appBar: AppBar(backgroundColor: Colors.transparent),
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -88,12 +168,7 @@ class _RegEmailPageState extends State<RegEmailPage> {
         child: Column(
           children: [
             const SizedBox(height: 64),
-
-            Image.asset(
-              'images/logo2.png',
-              width: 160,
-            ),
-
+            Image.asset('images/logo2.png', width: 160),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -106,14 +181,19 @@ class _RegEmailPageState extends State<RegEmailPage> {
                         children: [
                           TextFormField(
                             controller: _username,
-                            decoration: const InputDecoration(labelText: 'Nome de utilizador'),
-                            validator: (v) => (v == null || v.trim().length < 6) ? 'mínimo 6 caracteres' : null,
+                            decoration: const InputDecoration(
+                              labelText: 'Nome de utilizador',
+                            ),
+                            validator: (v) => (v == null || v.trim().length < 6)
+                                ? 'mínimo 6 caracteres'
+                                : null,
                           ),
-                          const SizedBox(height: 8),
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _email,
-                            decoration: const InputDecoration(labelText: 'Endereço de email'),
+                            decoration: const InputDecoration(
+                              labelText: 'Endereço de email',
+                            ),
                             keyboardType: TextInputType.emailAddress,
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) return 'Indique o email';
@@ -126,14 +206,22 @@ class _RegEmailPageState extends State<RegEmailPage> {
                             controller: _password,
                             decoration: const InputDecoration(labelText: 'Password'),
                             obscureText: true,
-                            validator: (v) => (v == null || v.length < 8) ? 'mínimo 8 caracteres' : null,
+                            validator: (v) => (v == null || v.length < 8)
+                                ? 'mínimo 8 caracteres'
+                                : null,
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _confpassword,
-                            decoration: const InputDecoration(labelText: 'Confirmar password'),
+                            decoration: const InputDecoration(
+                              labelText: 'Confirmar password',
+                            ),
                             obscureText: true,
-                            validator: (v) => (v != _password.text) ? 'As passwords não coincidem' : null,
+                            validator: (v) {
+                              if (v == null || v.isEmpty) return 'Confirme a password';
+                              if (v != _password.text) return 'As passwords não coincidem';
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 48),
                           Row(
@@ -143,20 +231,13 @@ class _RegEmailPageState extends State<RegEmailPage> {
                                 style: TextButton.styleFrom(
                                   foregroundColor: Colors.blue,
                                 ),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const MainApp(),
-                                    ),
-                                  );
-                                },
-                                child: const Text('Cancelar'),
+                                onPressed: _guarda ? null : () => Navigator.pop(context),
+                                child: const Text('Anterior'),
                               ),
                               const SizedBox(width: 16),
                               ElevatedButton(
-                                onPressed: _submit,
-                                child: const Text('Seguinte'),
+                                onPressed: _guarda ? null : _submit,
+                                child: Text(_guarda ? 'A guardar...' : 'Seguinte'),
                               ),
                             ],
                           ),

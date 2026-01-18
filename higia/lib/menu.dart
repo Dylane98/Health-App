@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:higia/profile.dart';
 
 class Menu extends StatelessWidget {
-  const Menu({super.key});
+  final int idutilizador;
+  const Menu({super.key, required this.idutilizador});
 
   @override
   Widget build(BuildContext context) {
@@ -13,8 +15,15 @@ class Menu extends StatelessWidget {
           backgroundColor: Colors.transparent,
           actions: [
             IconButton(
-              icon: Icon(Icons.settings),
-              onPressed: () {},
+              icon: const Icon(Icons.person),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => Profile(idutilizador: idutilizador),
+                  ),
+                );
+              },
             )
           ],
         ),
@@ -23,25 +32,17 @@ class Menu extends StatelessWidget {
             image: DecorationImage(
               image: AssetImage('images/background2.png'),
               fit: BoxFit.cover,
-            )
+            ),
           ),
           child: SafeArea(
             child: Center(
               child: SizedBox(
-                width: 500, // mantém a tua estrutura
+                width: 500,
                 child: Column(
                   children: [
                     const SizedBox(height: 60),
-
-                    // LOGO (centrado abaixo da AppBar)
-                    Image.asset(
-                      'images/logo2.png',
-                      height: 70,
-                    ),
-
+                    Image.asset('images/logo2.png', height: 70),
                     const SizedBox(height: 120),
-
-                    // BOTÃO 1 (centrado)
                     GestureDetector(
                       onTap: () {
                         debugPrint('The image button has been tapped');
@@ -49,57 +50,34 @@ class Menu extends StatelessWidget {
                       child: SizedBox(
                         width: 300,
                         height: 100,
-                        child: Image.asset('images/sono.png')
+                        child: Image.asset('images/sono.png'),
                       ),
                     ),
-                    
-
                     const SizedBox(height: 26),
-
-                    // LINHA 1 (2 botões)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset(
-                          'images/logo2.png',
-                          height: 70,
-                        ),
+                        Image.asset('images/logo2.png', height: 70),
                         const SizedBox(width: 26),
-                        Image.asset(
-                          'images/logo2.png',
-                          height: 70,
-                        ),
+                        Image.asset('images/logo2.png', height: 70),
                       ],
                     ),
-
                     const SizedBox(height: 26),
-
-                    // LINHA 2 (2 botões)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset(
-                          'images/logo2.png',
-                          height: 70,
-                        ),
+                        Image.asset('images/logo2.png', height: 70),
                         const SizedBox(width: 26),
-                        Image.asset(
-                          'images/logo2.png',
-                          height: 70,
-                        ),
+                        Image.asset('images/logo2.png', height: 70),
                       ],
                     ),
-
                     const Spacer(),
-
-                    // Exemplo: botão para ir ao Menu (se quiseres manter)
-                    
                   ],
                 ),
               ),
             ),
           ),
-        )
+        ),
       ),
     );
   }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:higia/dieta.dart';
 import 'package:higia/objPeso.dart';
+import 'package:higia/dadosRegisto.dart';
 
 
 class Objetivos extends StatefulWidget {
-  const Objetivos({super.key});
+  final RegistrationData data;
+  const Objetivos({super.key, required this.data});
 
   @override
   State<Objetivos> createState() => _ObjetivosState();
@@ -12,25 +14,39 @@ class Objetivos extends StatefulWidget {
 
 class _ObjetivosState extends State<Objetivos> {
   // Se por algum motivo estiveres a usar bool? noutros sítios, isto protege.
-  bool? melhorarAlimentacao;
-  bool? melhorarHumor;
-  bool? melhorarSono;
-  bool? atvFisica;
-  bool? redStress;
-  bool? ganharEnergia;
-  bool? outro;
+  late bool melhorarAlimentacao;
+  late bool melhorarHumor;
+  late bool melhorarSono;
+  late bool atvFisica;
+  late bool redStress;
+  late bool ganharEnergia;
+  late bool outro;
 
   @override
   void initState() {
     super.initState();
-    // Inicializa explicitamente (evita qualquer null)
-    melhorarAlimentacao = false;
-    melhorarHumor = false;
-    melhorarSono = false;
-    atvFisica = false;
-    redStress = false;
-    ganharEnergia = false;
-    outro = false;
+    melhorarAlimentacao = widget.data.melhorarAlimentacao;
+    melhorarHumor = widget.data.melhorarHumor;
+    melhorarSono = widget.data.melhorarSono;
+    atvFisica = widget.data.atvFisica;
+    redStress = widget.data.redStress;
+    ganharEnergia = widget.data.ganharEnergia;
+    outro = widget.data.outro;
+  }
+
+  void _seguinte() {
+    widget.data.melhorarAlimentacao = melhorarAlimentacao;
+    widget.data.melhorarHumor = melhorarHumor;
+    widget.data.melhorarSono = melhorarSono;
+    widget.data.atvFisica = atvFisica;
+    widget.data.redStress = redStress;
+    widget.data.ganharEnergia = ganharEnergia;
+    widget.data.outro = outro;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => Objpeso(data: widget.data)),
+    );
   }
 
   @override
@@ -64,49 +80,49 @@ class _ObjetivosState extends State<Objetivos> {
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Melhorar Alimentação'),
-                      value: melhorarAlimentacao ?? false,
+                      value: melhorarAlimentacao,
                       onChanged: (v) => setState(() => melhorarAlimentacao = v ?? false),
                     ),
                     CheckboxListTile(
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Melhorar humor'),
-                      value: melhorarHumor ?? false,
+                      value: melhorarHumor,
                       onChanged: (v) => setState(() => melhorarHumor = v ?? false),
                     ),
                     CheckboxListTile(
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Melhorar sono'),
-                      value: melhorarSono ?? false,
+                      value: melhorarSono,
                       onChanged: (v) => setState(() => melhorarSono = v ?? false),
                     ),
                     CheckboxListTile(
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Aumentar atividade física'),
-                      value: atvFisica ?? false,
+                      value: atvFisica,
                       onChanged: (v) => setState(() => atvFisica = v ?? false),
                     ),
                     CheckboxListTile(
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Reduzir Stress'),
-                      value: redStress ?? false,
+                      value: redStress,
                       onChanged: (v) => setState(() => redStress = v ?? false),
                     ),
                     CheckboxListTile(
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Ganhar energia'),
-                      value: ganharEnergia ?? false,
+                      value: ganharEnergia,
                       onChanged: (v) => setState(() => ganharEnergia = v ?? false),
                     ),
                     CheckboxListTile(
                       tristate: false,
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Outro'),
-                      value: outro ?? false,
+                      value: outro,
                       onChanged: (v) => setState(() => outro = v ?? false),
                     ),
                     SizedBox(height: 48),
@@ -114,29 +130,15 @@ class _ObjetivosState extends State<Objetivos> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       TextButton(
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.blue,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const Dieta()),
-                          );
-                        },
+                        style: TextButton.styleFrom(foregroundColor: Colors.blue),
+                        onPressed: () => Navigator.pop(context),
                         child: const Text('Anterior'),
                       ),
                       ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const Objpeso()),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.blue
-                        ),
-                        child: const Text('Seguinte'),
-                      ),
+                      onPressed: _seguinte,
+                      style: ElevatedButton.styleFrom(foregroundColor: Colors.blue),
+                      child: const Text('Seguinte'),
+                    ),
                     ],
                   )
                 ],
