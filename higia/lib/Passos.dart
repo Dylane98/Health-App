@@ -113,10 +113,10 @@ class _PassosState extends State<Passos> {
               children: [
                 ElevatedButton(onPressed: _running ? null : _start, child: const Text('Iniciar')),
                 ElevatedButton(onPressed: _running ? _stop : null, child: const Text('Parar')),
-                ElevatedButton(onPressed: _reset, child: const Text('Reset')),
+                ElevatedButton(onPressed: _reset, child: const Text('Reiniciar')),
                 ElevatedButton(onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => StepsHistory(idutilizador: widget.idutilizador)));
-                }, child: const Text('History')),
+                }, child: const Text('Histórico')),
               ],
             ),
             const SizedBox(height: 12),
