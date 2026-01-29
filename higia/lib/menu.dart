@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:higia/profile.dart';
 import 'package:higia/dadosRegisto.dart';
+import 'package:higia/relaxamento.dart';
 import 'package:higia/saude.dart';
+import 'Alimentacao.dart';
 import 'Passos.dart';
 import 'Sono.dart';
+import 'atividade.dart';
 
 class Menu extends StatelessWidget {
   final RegistrationData reg = RegistrationData();
@@ -134,21 +137,30 @@ class Menu extends StatelessWidget {
                             context,
                             asset: 'images/meditacao.png',
                             onTap: () {
-                              // TODO: navigate to meditation page
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => Relaxamento(idutilizador: idutilizador))
+                              );
                             },
                           ),
                           _buildTile(
                             context,
                             asset: 'images/alimentacao.png',
                             onTap: () {
-                              // TODO: navigate to nutrition page
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => Alimentacao(idutilizador: idutilizador))
+                              );
                             },
                           ),
                           _buildTile(
                             context,
                             asset: 'images/atividade.png',
                             onTap: () {
-                              // TODO: navigate to activities page
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => atividade(idutilizador: idutilizador))
+                              );
                             },
                           ),
                         ],
