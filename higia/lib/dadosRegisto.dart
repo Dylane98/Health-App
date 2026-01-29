@@ -1,4 +1,7 @@
 class RegistrationData {
+  int? idutilizador;
+  int? idAtividade;
+
   // 1º formulário
   String? nome;
   String? sobrenome;
@@ -55,6 +58,8 @@ class RegistrationData {
     this.peso,
     this.altura,
     this.nivelAtividadeDiaria,
+    this.idutilizador,
+    this.idAtividade,
   });
   // --- Helpers para a tua BD (várias tabelas) ---
 
@@ -179,6 +184,8 @@ class RegistrationData {
       peso: _parseDouble(map['peso']),
       altura: map['altura'],
       nivelAtividadeDiaria: nivel?.toString(),
+      idutilizador: map['idutilizador'], // Adicionado para suportar idutilizador
+      idAtividade: map['idAtividade'], // Adicionado para suportar idAtividade
     );
   }
 
@@ -192,6 +199,8 @@ class RegistrationData {
       if (peso != null) 'peso': peso,
       if (altura != null) 'altura': altura,
       if (nivelAtividadeDiaria != null) 'nivelAtividadeDiaria': nivelAtividadeDiaria,
+      if (idutilizador != null) 'idutilizador': idutilizador, // Adicionado para suportar idutilizador
+      if (idAtividade != null) 'idAtividade': idAtividade, // Adicionado para suportar idAtividade
     };
   }
 
@@ -203,6 +212,7 @@ class RegistrationData {
     double? peso,
     int? altura,
     int? idutilizador,
+    int? idAtividade,
   })
   {
     return RegistrationData(
@@ -212,7 +222,9 @@ class RegistrationData {
       sexo: sexo ?? this.sexo,
       peso: peso ?? this.peso,
       altura: altura ?? this.altura,
-      nivelAtividadeDiaria: nivelAtividadeDiaria ?? this.nivelAtividadeDiaria);
+      nivelAtividadeDiaria: nivelAtividadeDiaria ?? this.nivelAtividadeDiaria,
+      idutilizador: idutilizador ?? this.idutilizador, // Adicionado para suportar idutilizador
+      idAtividade: idAtividade ?? this.idAtividade, // Adicionado para suportar idAtividade
+    );
   }
 }
-

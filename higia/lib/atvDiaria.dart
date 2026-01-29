@@ -1,8 +1,12 @@
+// ignore_for_file: deprecated_member_use
 // dart
 import 'package:flutter/material.dart';
 import 'package:higia/atvPreferida.dart';
 import 'package:higia/dadosRegisto.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:higia/services/service_locator.dart';
+import 'package:higia/services/user_service.dart';
+
+final userService = getIt<UserService>();
 
 class atvDiaria extends StatefulWidget {
   final RegistrationData data;
@@ -22,15 +26,11 @@ class _atvDiariaState extends State<atvDiaria> {
   }
 
   Future<bool> _saveAtividade() async {
-
-    final client = Supabase.instance.client;
-
     try {
-      final payload = {
-        'AtividadeDiaria': nivel,
-      };
-
-      await client.from('Atividade').insert(payload);
+      // update local model before persisting
+      widget.data.nivelAtividadeDiaria = nivel;
+      final id = await userService.fetchOrCreateAtividade(nivel, widget.data);
+      if (id != null) widget.data.idAtividade = id;
       return true;
     } catch (e, st) {
       debugPrint('Failed to insert Atividade: $e\n$st');
@@ -42,8 +42,7 @@ class _atvDiariaState extends State<atvDiaria> {
     // update local model
     widget.data.nivelAtividadeDiaria = nivel;
 
-
-
+    await _saveAtividade();
 
     // proceed to next screen regardless; change to only-on-success if preferred
     Navigator.push(
@@ -85,30 +84,19 @@ class _atvDiariaState extends State<atvDiaria> {
                         ),
                       ),
                       const SizedBox(height: 32),
-                      RadioListTile<String>(
-                        title: const Text(
-                          'Sedentário - Menos de 5000 passos p/ dia',
+                      DropdownButtonFormField<String>(
+                        value: nivel,
+                        decoration: const InputDecoration(
+                          labelText: 'Nível de atividade diária',
+                          border: OutlineInputBorder(),
                         ),
-                        value: 'sedentario',
-                        groupValue: nivel,
-                        contentPadding: EdgeInsets.zero,
+                        items: const [
+                          DropdownMenuItem(value: 'sedentario', child: Text('Sedentário - Menos de 5000 passos p/ dia')),
+                          DropdownMenuItem(value: 'ativo', child: Text('Ativo - 8000 a 10000 passos p/ dia')),
+                          DropdownMenuItem(value: 'ideal', child: Text('Ideal - 40 a 60 minutos de atividade física diária')),
+                        ],
                         onChanged: (v) => setState(() => nivel = v),
-                      ),
-                      RadioListTile<String>(
-                        title: const Text('Ativo - 8000 a 10000 passos p/ dia'),
-                        value: 'ativo',
-                        groupValue: nivel,
-                        contentPadding: EdgeInsets.zero,
-                        onChanged: (v) => setState(() => nivel = v),
-                      ),
-                      RadioListTile<String>(
-                        title: const Text(
-                          'Ideal - 40 a 60 minutos de atividade física diária',
-                        ),
-                        value: 'ideal',
-                        groupValue: nivel,
-                        contentPadding: EdgeInsets.zero,
-                        onChanged: (v) => setState(() => nivel = v),
+                        validator: (v) => (v == null || v.isEmpty) ? 'Selecione um nível' : null,
                       ),
                     ],
                   ),

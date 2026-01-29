@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:higia/dieta.dart';
 import 'package:higia/main.dart';
 import 'package:higia/dadosRegisto.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:higia/services/lookup_service.dart';
+
+final _lookupService = LookupService();
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+  final RegistrationData data;
+  const RegisterPage({super.key, required this.data});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -29,25 +32,28 @@ class _RegisterPageState extends State<RegisterPage> {
   void initState() {
     super.initState();
     _carregarSexos();
+
+    // If the widget.data already contains values, prefill the controllers
+    // so the user can see/edit them.
+    final d = widget.data;
+    if (d.nome != null) _nome.text = d.nome!;
+    if (d.sobrenome != null) _sobrenome.text = d.sobrenome!;
+    if (d.altura != null) _altura.text = d.altura.toString();
+    if (d.peso != null) _peso.text = d.peso.toString();
+    if (d.alergias != null) _alergias.text = d.alergias!;
+    if (d.dataNascimento != null) _dataNascimento.text = d.dataNascimento!.toIso8601String().split('T').first;
+    if (d.sexo != null) _sexoSelecionado = d.sexo;
   }
 
   Future<void> _carregarSexos() async {
     try {
-      final client = Supabase.instance.client;
-
-      // RPC que devolve os valores do enum
-      final res = await client.rpc('sexo');
-
-      final lista = (res as List)
-        .map((e) => e.toString())
-        .toList();
-
-        if (!mounted) return;
-        setState(() {
-          _sexos = lista;
-          _aCarregarSexos = false;
-        });
-      } catch (e) {
+      final lista = await _lookupService.fetchSexos();
+      if (!mounted) return;
+      setState(() {
+        _sexos = lista;
+        _aCarregarSexos = false;
+      });
+    } catch (e) {
       if (!mounted) return;
       setState(() => _aCarregarSexos = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,8 +74,8 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _submit() async{
+    // remove unused local declaration
     if (!(_formKey.currentState?.validate() ?? false)) return ;
-    final client = Supabase.instance.client;
 
     final nome = _nome.text.trim();
     final sobrenome = _sobrenome.text.trim();
@@ -80,25 +86,33 @@ class _RegisterPageState extends State<RegisterPage> {
 
     final altura = int.tryParse(alturaText);
     final peso = double.tryParse(pesoText);
-    final dataNascimentoIso = dataNascimentoText.isNotEmpty ? dataNascimentoText : null;
+    final dataNascimento = dataNascimentoText.isNotEmpty ? DateTime.tryParse(dataNascimentoText) : null;
 
-    final payload = {
-      'sexo': _sexoSelecionado,
-      'nome': nome,
-      'sobrenome': sobrenome,
-      'altura': altura,
-      'peso': peso,
-      'alergias': alergias,
-      'datanascimento': dataNascimentoIso,
-    };
+    // populate the existing RegistrationData instance (don't store controllers)
+    widget.data.nome = nome.isNotEmpty ? nome : null;
+    widget.data.sobrenome = sobrenome.isNotEmpty ? sobrenome : null;
+    widget.data.altura = altura;
+    widget.data.peso = peso;
+    widget.data.alergias = alergias.isNotEmpty ? alergias : null;
+    widget.data.dataNascimento = dataNascimento;
+    widget.data.sexo = _sexoSelecionado;
 
-      await client.from('utilizador').insert(payload);
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => Dieta(data: RegistrationData())),
-      );
+    // If you want to insert into supabase now, use the helper that returns a Map
+    // and avoids sending TextEditingControllers. The utilizadorRow() will convert
+    // date fields appropriately (see dadosRegisto.dart).
+    // try {
+    //   await client.from('utilizador').insert(widget.data.utilizadorRow());
+    // } catch (e) {
+    //   debugPrint('Failed to insert utilizador: $e');
+    // }
 
-    }
+    // Pass the same object forward so subsequent forms keep filling it
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => Dieta(data: widget.data)),
+    );
+
+  }
 
 
   @override
@@ -145,11 +159,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _altura,
                             decoration: const InputDecoration(labelText: 'Altura em cm'),
                             keyboardType: TextInputType.number,
-                            validator: (a) {
-                              if (a == null || a.trim().isEmpty) return 'Campo obrigatório';
-                              final re = RegExp(r'^\d{3}$');
-                              return re.hasMatch(a.trim()) ? null : 'Altura inválida';
-                            },
+
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
@@ -198,7 +208,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                           // ✅ COMBOBOX SEXO (vai buscar ao enum via RPC)
                           DropdownButtonFormField<String>(
-                            value: _sexoSelecionado,
+                            initialValue: _sexoSelecionado,
                             decoration: const InputDecoration(labelText: 'Sexo'),
                             items: _sexos
                                 .map((s) => DropdownMenuItem(

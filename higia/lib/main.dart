@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:higia/login.dart';
 import 'package:higia/registry.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:higia/services/service_locator.dart';
+
+import 'dadosRegisto.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,11 +19,13 @@ void main() async {
     // Optionally rethrow or continue with a fallback
     rethrow;
   }
+  // Initialize service locator (register DI singletons)
+  await initServiceLocator();
   runApp(MainApp());
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  const MainApp({super.key,});
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +83,7 @@ class Homepage extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const RegisterPage()),
+                  MaterialPageRoute(builder: (_) => RegisterPage(data: RegistrationData())),
                 );
               },
               style: ElevatedButton.styleFrom(

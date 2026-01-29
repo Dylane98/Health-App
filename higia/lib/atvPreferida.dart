@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:higia/menu.dart';
 import 'package:higia/dadosRegisto.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:higia/regEmail.dart';
+import 'package:higia/services/service_locator.dart';
+import 'package:higia/services/user_service.dart';
+
+final userService = getIt<UserService>();
 
 class Atvpreferida extends StatefulWidget {
   final RegistrationData data;
@@ -39,35 +42,12 @@ class _AtvpreferidaState extends State<Atvpreferida> {
     widget.data.atvOutro = outro;
     _saveAtividade();
 
-    final client = Supabase.instance.client;
-    try {
-      final res = await client
-          .from('utilizador')
-          .select('idutilizador')
-          .eq('username', widget.data.username.toString().trim())
-          .eq('password', widget.data.password.toString())
-          .limit(1);
-
-      if (!mounted) return;
-
-      if (res.isNotEmpty) {
-        final id = res.first['idutilizador'] as int;
 
         Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => Menu(idutilizador: id,)),
+            MaterialPageRoute(builder: (_) => RegEmailPage(data: widget.data,)),
         );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Credenciais incorretas.')),
-        );
-    }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao recuperar utilizador: $e')),
-      );
-    }
+
   }
 
   Future<bool> _saveAtividade() async {
@@ -78,18 +58,13 @@ class _AtvpreferidaState extends State<Atvpreferida> {
     widget.data.passadeira = passadeira;
     widget.data.atvOutro = outro;
 
-    final client = Supabase.instance.client;
     try {
-      final atividadeTexto = widget.data.atividadePreferidaResumo();
-
-      final payload = {
-        'AtividadePreferida': atividadeTexto,
-        'AtividadeDiaria': widget.data.nivelAtividadeDiaria,
-      };
-
-      await client.from('Atividade').insert(payload);
+      // ensure there is an Atividade row for this user's choices and capture id
+      final idAtv = await userService.fetchOrCreateAtividade(widget.data.nivelAtividadeDiaria, widget.data);
+      if (idAtv != null) widget.data.idAtividade = idAtv;
       return true;
     } catch (e) {
+      debugPrint('Failed to save atividade: $e');
       return false;
     }
   }

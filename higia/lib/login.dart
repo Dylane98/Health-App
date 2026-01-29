@@ -103,30 +103,55 @@ class _LoginState extends State<Login> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    TextFormField(
-                      controller: _username,
-                      keyboardType: TextInputType.text,
-                      decoration: const InputDecoration(
-                        border: UnderlineInputBorder(),
-                        labelText: 'Nome de utilizador',
+                    // Limit the field width so the underline is not full-width
+                    SizedBox(
+                      width: 300,
+                      child: TextFormField(
+                        controller: _username,
+                        keyboardType: TextInputType.text,
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(width: 1.2),
+                          ),
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(width: 2.0),
+                          ),
+                          labelText: 'Nome de utilizador',
+                          alignLabelWithHint: true,
+                        ),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Indicar o nome de utilizador'
+                            : null,
                       ),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'Indicar o nome de utilizador'
-                          : null,
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _password,
-                      keyboardType: TextInputType.visiblePassword,
-                      decoration: const InputDecoration(
-                        border: UnderlineInputBorder(),
-                        labelText: 'Password',
+                    SizedBox(
+                      width: 300,
+                      child: TextFormField(
+                        controller: _password,
+                        keyboardType: TextInputType.visiblePassword,
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(width: 1.2),
+                          ),
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(width: 2.0),
+                          ),
+                          labelText: 'Password',
+                          alignLabelWithHint: true,
+                        ),
+                        obscureText: true,
+                        validator: (v) =>
+                            (v == null || v.isEmpty) ? 'Indicar a password' : null,
                       ),
-                      obscureText: true,
-                      validator: (v) =>
-                          (v == null || v.isEmpty) ? 'Indicar a password' : null,
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 80),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -142,6 +167,7 @@ class _LoginState extends State<Login> {
                               ),
                             );
                           },
+
                           child: const Text('Recuperar Password'),
                         ),
                         ElevatedButton(

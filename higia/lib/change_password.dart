@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:higia/profile.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:higia/services/auth_service.dart';
+
+final _authService = AuthService();
 
 class ChangePassword extends StatefulWidget {
   final int idutilizador;
@@ -59,29 +61,13 @@ class _ChangePasswordState extends State<ChangePassword> {
     }
 
     setState(() => _guarda = true);
-    final client = Supabase.instance.client;
-
     try {
-      final res = await client
-          .from('utilizador')
-          .select('idutilizador')
-          .eq('idutilizador', widget.idutilizador)
-          .eq('password', atual)
-          .limit(1);
-
+      final ok = await _authService.changePassword(widget.idutilizador, atual, nova);
       if (!mounted) return;
-
-      if (res.isEmpty) {
+      if (!ok) {
         _alert('Erro', 'A password atual está incorreta.');
         return;
       }
-
-      await client
-          .from('utilizador')
-          .update({'password': nova})
-          .eq('idutilizador', widget.idutilizador);
-
-      if (!mounted) return;
 
       _passwordAtual.clear();
       _novaPassword.clear();

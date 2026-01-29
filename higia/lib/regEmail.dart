@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:higia/menu.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:higia/dadosRegisto.dart';
+import 'package:higia/services/service_locator.dart';
+import 'package:higia/services/user_service.dart';
 
 class RegEmailPage extends StatefulWidget {
   final RegistrationData data;
@@ -19,6 +20,20 @@ class _RegEmailPageState extends State<RegEmailPage> {
   final _confpassword = TextEditingController();
 
   bool _guarda = false;
+  final userService = getIt<UserService>();
+
+  // Helper: deeply serialize DateTime objects in maps/lists to ISO strings
+  dynamic _serializeForSupabase(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value.toIso8601String();
+    if (value is Map) {
+      return value.map((k, v) => MapEntry(k.toString(), _serializeForSupabase(v)));
+    }
+    if (value is List) {
+      return value.map((e) => _serializeForSupabase(e)).toList();
+    }
+    return value;
+  }
 
   @override
   void dispose() {
@@ -60,44 +75,13 @@ class _RegEmailPageState extends State<RegEmailPage> {
 
   Future<void> _confirmarESalvar() async {
     setState(() => _guarda = true);
-    final client = Supabase.instance.client;
 
     try {
-      // 1) Inserir na tabela utilizador e obter o idutilizador gerado
-      final userRow = await client
-          .from('utilizador')
-          .insert(widget.data.utilizadorRow())
-          .select('idutilizador')
-          .single();
-
-      final int idUtilizador = userRow['idutilizador'] as int;
-
-      // 2) Inserir objetivos (tabela objetivo_utilizador) - N linhas
-      final objetivos = widget.data.objetivosIds();
-      if (objetivos.isNotEmpty) {
-        await client.from('objetivo_utilizador').insert(
-              objetivos
-                  .map((idObjetivo) => {
-                        'idutilizador': idUtilizador,
-                        'idobjetivo': idObjetivo,
-                        'Date': DateTime.now().toIso8601String(),
-                      })
-                  .toList(),
-            );
-      }
-
-      // 3) Inserir motivação (tabela motivacao_utilizador) - 1 linha
-      final idMotivacao = widget.data.idMotivacao();
-      if (idMotivacao != null) {
-        await client.from('motivacao_utilizador').insert({
-          'idutilizador': idUtilizador,
-          'idmotivacao': idMotivacao,
-          'Date': DateTime.now().toIso8601String(),
-        });
-      }
-
+      final created = await userService.createUser(widget.data);
+      if (created == null) throw Exception('Failed to create user');
+      widget.data.idutilizador = created;
       if (!mounted) return;
-      _sucesso(idUtilizador);
+      _sucesso(created);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
