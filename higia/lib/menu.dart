@@ -3,6 +3,7 @@ import 'package:higia/profile.dart';
 import 'package:higia/dadosRegisto.dart';
 import 'package:higia/saude.dart';
 import 'Passos.dart';
+import 'Sono.dart';
 
 class Menu extends StatelessWidget {
   final RegistrationData reg = RegistrationData();
@@ -123,7 +124,10 @@ class Menu extends StatelessWidget {
                             context,
                             asset: 'images/sono.png',
                             onTap: () {
-                              // TODO: navigate to sleep page
+                              Navigator.push(
+                                  context,
+                              MaterialPageRoute(builder: (_) => Sono(idutilizador: idutilizador))
+                                  );
                             },
                           ),
                           _buildTile(
