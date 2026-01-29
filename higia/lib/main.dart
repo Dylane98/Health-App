@@ -5,11 +5,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: 'https://uhortitqkefkfppnfifw.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVob3J0aXRxa2Vma2ZwcG5maWZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4ODg5ODksImV4cCI6MjA4MTQ2NDk4OX0.IsMCivRAyJaBgsaV7LKdynJ01fuwxSArJZpXda28_-Y',
-  );
-  runApp(const MainApp());
+  try {
+    await Supabase.initialize(
+      url: 'https://uhortitqkefkfppnfifw.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVob3J0aXRxa2Vma2ZwcG5maWZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4ODg5ODksImV4cCI6MjA4MTQ2NDk4OX0.IsMCivRAyJaBgsaV7LKdynJ01fuwxSArJZpXda28_-Y',
+    );
+  } catch (e, st) {
+    // Log initialization problem so you can see the root cause
+    debugPrint('Supabase.initialize failed: $e\n$st');
+    // Optionally rethrow or continue with a fallback
+    rethrow;
+  }
+  runApp(MainApp());
 }
 
 class MainApp extends StatelessWidget {
@@ -17,9 +24,10 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    // remove `const` so build-time constants don't hide runtime issues
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Homepage(),
+      home: const Homepage(),
     );
   }
 }

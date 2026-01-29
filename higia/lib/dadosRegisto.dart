@@ -3,9 +3,10 @@ class RegistrationData {
   String? nome;
   String? sobrenome;
   int? altura;
-  int? peso;
+  double? peso;
   String? alergias;
-  String? sexo; 
+  String? sexo;
+  DateTime? dataNascimento;
 
   // 2º formulário (Dieta) - checkboxes
   bool alimentacaoVariada = false;
@@ -29,6 +30,7 @@ class RegistrationData {
 
   // 5º formulário (AtvDiaria) - radio
   String? nivelAtividadeDiaria; // sedentario/ativo/ideal
+  String? AtividadePreferida;
 
   // 6º formulário (AtvPreferida) - checkboxes
   bool caminhadas = false;
@@ -45,6 +47,15 @@ class RegistrationData {
   String? email;
   String? password;
 
+  RegistrationData({
+    this.nome,
+    this.email,
+    this.dataNascimento,
+    this.sexo,
+    this.peso,
+    this.altura,
+    this.nivelAtividadeDiaria,
+  });
   // --- Helpers para a tua BD (várias tabelas) ---
 
   /// Texto para guardar em utilizador.dieta (varchar)
@@ -110,6 +121,28 @@ class RegistrationData {
     }
   }
 
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is String && value.isNotEmpty) {
+      try {
+        return DateTime.tryParse(value);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  // Helper: parse dynamic to double
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value.replaceAll(',', '.'));
+    return null;
+  }
+
   /// Linha para inserir na tabela utilizador
   /// (não inclui idAtividade porque normalmente vais calcular/definir no fim)
   Map<String, dynamic> utilizadorRow({int? idAtividade}) => {
@@ -124,7 +157,62 @@ class RegistrationData {
         'username': username,
         'password': password,
         'dieta': dietaResumo(),
+        'datanascimento': dataNascimento,
         // 'alergias': ..., // se adicionares depois
         if (idAtividade != null) 'idAtividade': idAtividade,
       };
+
+  factory RegistrationData.fromMap(Map<String, dynamic> map) {
+    // tolerant lookup for activity level column
+    final nivel = map['nivelAtividadeDiaria'] ??
+        map['nivel_atividade_diaria'] ??
+        map['nivelatividadediaria'] ??
+        map['nivelatividade'] ??
+        map['nivel_atividade'] ??
+        map['nivel'];
+
+    return RegistrationData(
+      nome: map['nome']?.toString(),
+      email: map['email']?.toString(),
+      dataNascimento: _parseDate(map['datanascimento'] ?? map['data_nascimento'] ?? map['birthdate']),
+      sexo: map['genero']?.toString(),
+      peso: _parseDouble(map['peso']),
+      altura: map['altura'],
+      nivelAtividadeDiaria: nivel?.toString(),
+    );
+  }
+
+  // Convert back to map (useful for updates)
+  Map<String, dynamic> toMap() {
+    return {
+      if (nome != null) 'nome': nome,
+      if (email != null) 'email': email,
+      if (dataNascimento != null) 'datanascimento': dataNascimento!.toIso8601String(),
+      if (sexo != null) 'genero': sexo,
+      if (peso != null) 'peso': peso,
+      if (altura != null) 'altura': altura,
+      if (nivelAtividadeDiaria != null) 'nivelAtividadeDiaria': nivelAtividadeDiaria,
+    };
+  }
+
+  RegistrationData copyWith({
+    String? nome,
+    String? email,
+    DateTime? dataNascimento,
+    String? sexo,
+    double? peso,
+    int? altura,
+    int? idutilizador,
+  })
+  {
+    return RegistrationData(
+      nome: nome ?? this.nome,
+      email: email ?? this.email,
+      dataNascimento: dataNascimento ?? this.dataNascimento,
+      sexo: sexo ?? this.sexo,
+      peso: peso ?? this.peso,
+      altura: altura ?? this.altura,
+      nivelAtividadeDiaria: nivelAtividadeDiaria ?? this.nivelAtividadeDiaria);
+  }
 }
+
