@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:higia/menu.dart';
 import 'package:higia/recover_password.dart';
-import 'package:higia/profile.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Login extends StatefulWidget {

@@ -1,8 +1,8 @@
+// dart
 import 'package:flutter/material.dart';
 import 'package:higia/atvPreferida.dart';
-import 'package:higia/objPeso.dart';
 import 'package:higia/dadosRegisto.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class atvDiaria extends StatefulWidget {
   final RegistrationData data;
@@ -21,8 +21,31 @@ class _atvDiariaState extends State<atvDiaria> {
     nivel = widget.data.nivelAtividadeDiaria;
   }
 
-  void _next() {
+  Future<bool> _saveAtividade() async {
+
+    final client = Supabase.instance.client;
+
+    try {
+      final payload = {
+        'AtividadeDiaria': nivel,
+      };
+
+      await client.from('Atividade').insert(payload);
+      return true;
+    } catch (e, st) {
+      debugPrint('Failed to insert Atividade: $e\n$st');
+      return false;
+    }
+  }
+
+  void _saveAndNext() async {
+    // update local model
     widget.data.nivelAtividadeDiaria = nivel;
+
+
+
+
+    // proceed to next screen regardless; change to only-on-success if preferred
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => Atvpreferida(data: widget.data)),
@@ -56,11 +79,16 @@ class _atvDiariaState extends State<atvDiaria> {
                     children: [
                       const Text(
                         'Indique o seu nível de atividade diária.',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 32),
                       RadioListTile<String>(
-                        title: const Text('Sedentário - Menos de 5000 passos p/ dia'),
+                        title: const Text(
+                          'Sedentário - Menos de 5000 passos p/ dia',
+                        ),
                         value: 'sedentario',
                         groupValue: nivel,
                         contentPadding: EdgeInsets.zero,
@@ -74,7 +102,9 @@ class _atvDiariaState extends State<atvDiaria> {
                         onChanged: (v) => setState(() => nivel = v),
                       ),
                       RadioListTile<String>(
-                        title: const Text('Ideal - 40 a 60 minutos de atividade física diária'),
+                        title: const Text(
+                          'Ideal - 40 a 60 minutos de atividade física diária',
+                        ),
                         value: 'ideal',
                         groupValue: nivel,
                         contentPadding: EdgeInsets.zero,
@@ -93,12 +123,14 @@ class _atvDiariaState extends State<atvDiaria> {
                       child: const Text('Anterior'),
                     ),
                     ElevatedButton(
-                      onPressed: _next,
-                      style: ElevatedButton.styleFrom(foregroundColor: Colors.blue),
+                      onPressed: _saveAndNext,
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                      ),
                       child: const Text('Seguinte'),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

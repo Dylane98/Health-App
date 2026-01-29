@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:higia/atvDiaria.dart';
-import 'package:higia/motivacao.dart';
+import 'package:higia/menu.dart';
 import 'package:higia/dadosRegisto.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Atvpreferida extends StatefulWidget {
   final RegistrationData data;
@@ -12,12 +12,13 @@ class Atvpreferida extends StatefulWidget {
 }
 
 class _AtvpreferidaState extends State<Atvpreferida> {
-  // Se por algum motivo estiveres a usar bool? noutros sítios, isto protege.
   late bool caminhadas;
   late bool corrida;
   late bool natacao;
   late bool passadeira;
   late bool outro;
+
+  late final int idutilizador;
 
   @override
   void initState() {
@@ -27,19 +28,70 @@ class _AtvpreferidaState extends State<Atvpreferida> {
     natacao = widget.data.natacao;
     passadeira = widget.data.passadeira;
     outro = widget.data.atvOutro;
+
   }
 
-  void _seguinte() {
+  void _seguinte() async{
+    widget.data.caminhadas = caminhadas;
+    widget.data.corrida = corrida;
+    widget.data.natacao = natacao;
+    widget.data.passadeira = passadeira;
+    widget.data.atvOutro = outro;
+    _saveAtividade();
+
+    final client = Supabase.instance.client;
+    try {
+      final res = await client
+          .from('utilizador')
+          .select('idutilizador')
+          .eq('username', widget.data.username.toString().trim())
+          .eq('password', widget.data.password.toString())
+          .limit(1);
+
+      if (!mounted) return;
+
+      if (res.isNotEmpty) {
+        final id = res.first['idutilizador'] as int;
+
+        Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => Menu(idutilizador: id,)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Credenciais incorretas.')),
+        );
+    }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao recuperar utilizador: $e')),
+      );
+    }
+  }
+
+  Future<bool> _saveAtividade() async {
+    // update widget.data so atividadePreferidaResumo() reflects current selections
     widget.data.caminhadas = caminhadas;
     widget.data.corrida = corrida;
     widget.data.natacao = natacao;
     widget.data.passadeira = passadeira;
     widget.data.atvOutro = outro;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => Motivacao(data: widget.data)),
-    );
+    final client = Supabase.instance.client;
+    try {
+      final atividadeTexto = widget.data.atividadePreferidaResumo();
+
+      final payload = {
+        'AtividadePreferida': atividadeTexto,
+        'AtividadeDiaria': widget.data.nivelAtividadeDiaria,
+      };
+
+      await client.from('Atividade').insert(payload);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   @override

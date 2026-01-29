@@ -18,6 +18,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final _altura = TextEditingController();
   final _peso = TextEditingController();
   final _alergias = TextEditingController();
+  final _dataNascimento = TextEditingController();
+
 
   List<String> _sexos = [];
   String? _sexoSelecionado;
@@ -61,25 +63,43 @@ class _RegisterPageState extends State<RegisterPage> {
     _altura.dispose();
     _peso.dispose();
     _alergias.dispose();
+    _dataNascimento.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+  void _submit() async{
+    if (!(_formKey.currentState?.validate() ?? false)) return ;
+    final client = Supabase.instance.client;
 
-    final data = RegistrationData()
-      ..nome = _nome.text.trim()
-      ..sobrenome = _sobrenome.text.trim()
-      ..altura = int.parse(_altura.text.trim())
-      ..peso = int.parse(_peso.text.trim())
-      ..alergias = _alergias.text.trim()
-      ..sexo = _sexoSelecionado; // ✅ vai para utilizador.sexo
+    final nome = _nome.text.trim();
+    final sobrenome = _sobrenome.text.trim();
+    final alturaText = _altura.text.trim();
+    final pesoText = _peso.text.trim();
+    final alergias = _alergias.text.trim();
+    final dataNascimentoText = _dataNascimento.text.trim();
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => Dieta(data: data)),
-    );
-  }
+    final altura = int.tryParse(alturaText);
+    final peso = double.tryParse(pesoText);
+    final dataNascimentoIso = dataNascimentoText.isNotEmpty ? dataNascimentoText : null;
+
+    final payload = {
+      'sexo': _sexoSelecionado,
+      'nome': nome,
+      'sobrenome': sobrenome,
+      'altura': altura,
+      'peso': peso,
+      'alergias': alergias,
+      'datanascimento': dataNascimentoIso,
+    };
+
+      await client.from('utilizador').insert(payload);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => Dieta(data: RegistrationData())),
+      );
+
+    }
+
 
   @override
   Widget build(BuildContext context) {
@@ -133,14 +153,38 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
+                            controller: _dataNascimento,
+                            decoration: const InputDecoration(labelText: 'Data de nascimento'),
+                            keyboardType: TextInputType.datetime,
+                            readOnly: true,
+                            onTap: () async {
+                              // try to parse existing value to use as initial date
+                              DateTime initialDate = DateTime.now();
+                              final existing = _dataNascimento.text.trim();
+                              if (existing.isNotEmpty) {
+                                final parsed = DateTime.tryParse(existing);
+                                if (parsed != null) initialDate = parsed;
+                              }
+
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: initialDate,
+                                firstDate: DateTime(1900),
+                                lastDate: DateTime.now(),
+                              );
+
+                              if (picked != null) {
+                                // format as yyyy-MM-dd to match validator
+                                final formatted = picked.toIso8601String().split('T').first;
+                                setState(() => _dataNascimento.text = formatted);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
                             controller: _peso,
                             decoration: const InputDecoration(labelText: 'Peso'),
                             keyboardType: TextInputType.number,
-                            validator: (p) {
-                              if (p == null || p.trim().isEmpty) return 'Campo obrigatório';
-                              final re = RegExp(r'^\d{2,3}$');
-                              return re.hasMatch(p.trim()) ? null : 'Peso inválido';
-                            },
                           ),
                           const SizedBox(height: 8),
                           TextFormField(

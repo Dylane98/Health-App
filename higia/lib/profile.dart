@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:higia/change_password.dart';
 import 'package:higia/main.dart';
 import 'package:higia/menu.dart';
-import 'package:higia/login.dart'; // 👈 página de login
 
 class Profile extends StatelessWidget {
   final int idutilizador;
@@ -39,8 +38,6 @@ class ProfilePage extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-
-              // 🔒 Remove todo o histórico de navegação
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const MainApp()),
@@ -104,7 +101,6 @@ class ProfilePage extends StatelessWidget {
                 child: const Text('Retroceder'),
               ),
 
-              // 🔴 LOGOUT
               TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.red,

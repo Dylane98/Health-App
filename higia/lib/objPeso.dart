@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:higia/atvDiaria.dart';
-import 'package:higia/objetivos.dart';
 import 'package:higia/dadosRegisto.dart';
 
 class Objpeso extends StatefulWidget {
@@ -13,7 +12,7 @@ class Objpeso extends StatefulWidget {
 
 class _ObjpesoState extends State<Objpeso> {
   String? peso;
-
+late final int idutilizador;
   @override
   void initState() {
     super.initState();

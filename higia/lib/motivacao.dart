@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:higia/atvPreferida.dart';
+import 'package:higia/objetivos.dart';
 import 'package:higia/regEmail.dart';
 import 'package:higia/dadosRegisto.dart';
 
 class Motivacao extends StatefulWidget {
   final RegistrationData data;
-  const Motivacao({super.key, required this.data});
+  const Motivacao({super.key, required this.data, required this.idutilizador});
+  final int idutilizador;
 
   @override
   State<Motivacao> createState() => _MotivacaoState();
@@ -13,7 +14,7 @@ class Motivacao extends StatefulWidget {
 
 class _MotivacaoState extends State<Motivacao> {
   String? motivacao;
-
+late final int idutilizador;
   @override
   void initState() {
     super.initState();
@@ -25,8 +26,8 @@ class _MotivacaoState extends State<Motivacao> {
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => RegEmailPage(data: widget.data)),
-    );
+      MaterialPageRoute(builder: (_) => Objetivos(data: widget.data)
+      ));
   }
 
   @override

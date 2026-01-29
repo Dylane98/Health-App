@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:higia/dieta.dart';
 import 'package:higia/objPeso.dart';
 import 'package:higia/dadosRegisto.dart';
 
@@ -13,7 +12,6 @@ class Objetivos extends StatefulWidget {
 }
 
 class _ObjetivosState extends State<Objetivos> {
-  // Se por algum motivo estiveres a usar bool? noutros sítios, isto protege.
   late bool melhorarAlimentacao;
   late bool melhorarHumor;
   late bool melhorarSono;
@@ -22,6 +20,7 @@ class _ObjetivosState extends State<Objetivos> {
   late bool ganharEnergia;
   late bool outro;
 
+  late final int idutilizador;
   @override
   void initState() {
     super.initState();

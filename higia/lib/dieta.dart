@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:higia/objetivos.dart';
-import 'package:higia/registry.dart';
 import 'package:higia/dadosRegisto.dart';
 
 class Dieta extends StatefulWidget {
@@ -12,7 +11,6 @@ class Dieta extends StatefulWidget {
 }
 
 class _DietaState extends State<Dieta> {
-  // Se por algum motivo estiveres a usar bool? noutros sítios, isto protege.
   late bool alimentacaoVariada;
   late bool vegetariano;
   late bool semLactose;
@@ -20,10 +18,10 @@ class _DietaState extends State<Dieta> {
   late bool carne;
   late bool peixe;
 
+  late final int idutilizador;
   @override
   void initState() {
     super.initState();
-    // Inicializa explicitamente (evita qualquer null)
     alimentacaoVariada = widget.data.alimentacaoVariada;
     vegetariano = widget.data.vegetariano;
     semLactose = widget.data.semLactose;

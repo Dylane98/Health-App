@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:higia/atvDiaria.dart';
 import 'package:higia/profile.dart';
+import 'package:higia/dadosRegisto.dart';
+import 'package:higia/saude.dart';
 
 class Menu extends StatelessWidget {
+ final RegistrationData reg = RegistrationData();
   final int idutilizador;
-  const Menu({super.key, required this.idutilizador});
+  Menu({super.key, required this.idutilizador});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +24,7 @@ class Menu extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => Profile(idutilizador: idutilizador),
+                    builder: (_) => Profile(idutilizador: idutilizador)
                   ),
                 );
               },
@@ -42,33 +46,131 @@ class Menu extends StatelessWidget {
                   children: [
                     const SizedBox(height: 60),
                     Image.asset('images/logo2.png', height: 70),
+
                     const SizedBox(height: 120),
                     GestureDetector(
                       onTap: () {
-                        debugPrint('The image button has been tapped');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => Saude(data: reg, idutilizador: idutilizador),
+                          ),
+                        );
                       },
-                      child: SizedBox(
-                        width: 300,
-                        height: 100,
-                        child: Image.asset('images/sono.png'),
+                      child: Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage('images/Saude.png'),
+                            fit: BoxFit.cover,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x3F000000),
+                              blurRadius: 12,
+                              offset: Offset(0, 4),
+                              spreadRadius: 0,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+
                     const SizedBox(height: 26),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset('images/logo2.png', height: 70),
-                        const SizedBox(width: 26),
-                        Image.asset('images/logo2.png', height: 70),
+                        Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage('images/sono.png'),
+                              fit: BoxFit.cover,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x3F000000),
+                                blurRadius: 12,
+                                offset: Offset(0, 4),
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 50),
+                        Container(
+                          width: 140,
+                          height: 140,
+
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage('images/meditacao.png'),
+                              fit: BoxFit.cover,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x3F000000),
+                                blurRadius: 12,
+                                offset: Offset(0, 4),
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 26),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset('images/logo2.png', height: 70),
-                        const SizedBox(width: 26),
-                        Image.asset('images/logo2.png', height: 70),
+                        Column(
+                          children: [
+                            Container(
+                              width: 140,
+                              height: 140,
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: AssetImage('images/alimentacao.png'),
+                                  fit: BoxFit.cover,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color(0x3F000000),
+                                    blurRadius: 12,
+                                    offset: Offset(0, 4),
+                                    spreadRadius: 0,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 50),
+                        Container(
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage('images/atividade.png'),
+                              fit: BoxFit.cover,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x3F000000),
+                                blurRadius: 12,
+                                offset: Offset(0, 4),
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                     const Spacer(),
