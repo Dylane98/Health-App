@@ -11,75 +11,143 @@ class Sono extends StatefulWidget {
   State<Sono> createState() => _SonoState();
 }
 
-class _SonoState extends State<Sono> {
-  // Opções de duração
-  final List<int> opcoesHoras = [6, 7, 8, 9];
-  int horasSelecionadas = 8;
+class SonoModel {
+  final List<int> opcoesHoras;
+  int horasSelecionadas;
+
+  Duration restante;
+  bool aDormir;
+
+  double qualidadeSono;
+  final List<String> registoSono;
+
+  SonoModel({
+    this.opcoesHoras = const [6, 7, 8, 9],
+    this.horasSelecionadas = 8,
+    Duration? restante,
+    this.aDormir = false,
+    this.qualidadeSono = 3,
+    List<String>? registoSono,
+  }) : restante = restante ?? const Duration(hours: 8),
+       registoSono = registoSono ?? [];
 
   Duration get duracaoSono => Duration(hours: horasSelecionadas);
+}
 
-  Duration restante = const Duration(hours: 8);
-  Timer? timer;
-  bool aDormir = false;
+class SonoController {
+  Timer? _timer;
 
-  // Slider qualidade (1-5)
-  double qualidadeSono = 3;
+  void iniciarContagem({
+    required Duration duracao,
+    required VoidCallback onTick,
+    required VoidCallback onTerminar,
+    required bool Function() mountedCheck,
+    required Duration Function() getRestante,
+    required void Function(Duration novo) setRestante,
+  }) {
+    _timer?.cancel();
 
-  // Registo de sono (offline, em memória)
-  final List<String> registoSono = [];
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mountedCheck()) return;
 
-  void iniciarSono() {
-    _iniciarContagem(duracaoSono);
-  }
-
-  void iniciarSoneca() {
-    _iniciarContagem(const Duration(minutes: 20));
-  }
-
-  void _iniciarContagem(Duration duracao) {
-    timer?.cancel();
-
-    setState(() {
-      restante = duracao;
-      aDormir = true;
-    });
-
-    timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) return;
-
-      if (restante.inSeconds <= 0) {
+      final r = getRestante();
+      if (r.inSeconds <= 0) {
         t.cancel();
-        setState(() => aDormir = false);
-        _sonoTerminado(duracao);
+        onTerminar();
       } else {
-        setState(() {
-          restante -= const Duration(seconds: 1);
-        });
+        setRestante(r - const Duration(seconds: 1));
+        onTick();
       }
     });
   }
 
-  void pararSono() {
-    timer?.cancel();
-    setState(() => aDormir = false);
+  void parar() {
+    _timer?.cancel();
   }
 
-  void _sonoTerminado(Duration duracaoFinal) {
+  void dispose() {
+    _timer?.cancel();
+  }
+
+  String formatar(Duration d) {
+    String dois(int n) => n.toString().padLeft(2, '0');
+    return '${dois(d.inHours)}:${dois(d.inMinutes % 60)}:${dois(d.inSeconds % 60)}';
+  }
+
+  String textoDuracao(Duration duracao) {
+    final minutosTotais = duracao.inMinutes;
+    if (minutosTotais >= 60) return "${duracao.inHours} h";
+    return "${duracao.inMinutes} min";
+  }
+
+  String horaAgora() {
     final agora = TimeOfDay.now();
     final hh = agora.hour.toString().padLeft(2, '0');
     final mm = agora.minute.toString().padLeft(2, '0');
+    return "$hh:$mm";
+  }
 
-    final minutosTotais = duracaoFinal.inMinutes;
-    final textoDuracao = minutosTotais >= 60
-        ? "${duracaoFinal.inHours} h"
-        : "${duracaoFinal.inMinutes} min";
+  String horaAcordar(Duration restante) {
+    final acordar = DateTime.now().add(restante);
+    final hh = acordar.hour.toString().padLeft(2, '0');
+    final mm = acordar.minute.toString().padLeft(2, '0');
+    return "$hh:$mm";
+  }
+}
 
-    final qualidade = qualidadeSono.round();
+class _SonoState extends State<Sono> {
+  late final SonoModel model;
+  late final SonoController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    model = SonoModel();
+    controller = SonoController();
+  }
+
+  void _iniciarSono() {
+    _iniciarContagem(model.duracaoSono);
+  }
+
+  void _iniciarSoneca() {
+    _iniciarContagem(const Duration(minutes: 20));
+  }
+
+  void _iniciarContagem(Duration duracao) {
+    setState(() {
+      model.restante = duracao;
+      model.aDormir = true;
+    });
+
+    controller.iniciarContagem(
+      duracao: duracao,
+      mountedCheck: () => mounted,
+      getRestante: () => model.restante,
+      setRestante: (novo) => setState(() => model.restante = novo),
+      onTick: () {},
+      onTerminar: () {
+        if (!mounted) return;
+        setState(() => model.aDormir = false);
+        _sonoTerminado(duracao);
+      },
+    );
+  }
+
+  void _pararSono() {
+    controller.parar();
+    setState(() => model.aDormir = false);
+  }
+
+  void _sonoTerminado(Duration duracaoFinal) {
+    final textoDuracao = controller.textoDuracao(duracaoFinal);
+    final qualidade = model.qualidadeSono.round();
+    final hora = controller.horaAgora();
 
     setState(() {
-      registoSono.insert(
+      model.registoSono.insert(
         0,
-        "😴 $textoDuracao • Qualidade: $qualidade/5 • terminou às $hh:$mm",
+        "😴 $textoDuracao • Qualidade: $qualidade/5 • terminou às $hora",
       );
     });
 
@@ -100,20 +168,15 @@ class _SonoState extends State<Sono> {
     );
   }
 
-  String formatar(Duration d) {
-    String dois(int n) => n.toString().padLeft(2, '0');
-    return '${dois(d.inHours)}:${dois(d.inMinutes % 60)}:${dois(d.inSeconds % 60)}';
-  }
-
   @override
   void dispose() {
-    timer?.cancel();
+    controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final acordar = DateTime.now().add(restante);
+    final horaAcordar = controller.horaAcordar(model.restante);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -155,7 +218,6 @@ class _SonoState extends State<Sono> {
                     Center(child: Image.asset('images/sono.png', height: 80)),
                     const SizedBox(height: 18),
 
-                    // Duração do sono
                     _CardSection(
                       title: "Duração do sono",
                       child: Row(
@@ -167,7 +229,7 @@ class _SonoState extends State<Sono> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<int>(
-                              value: horasSelecionadas,
+                              value: model.horasSelecionadas,
                               decoration: InputDecoration(
                                 filled: true,
                                 fillColor: Colors.white.withOpacity(0.85),
@@ -175,7 +237,7 @@ class _SonoState extends State<Sono> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              items: opcoesHoras
+                              items: model.opcoesHoras
                                   .map(
                                     (h) => DropdownMenuItem(
                                       value: h,
@@ -183,13 +245,13 @@ class _SonoState extends State<Sono> {
                                     ),
                                   )
                                   .toList(),
-                              onChanged: aDormir
+                              onChanged: model.aDormir
                                   ? null
                                   : (v) {
                                       if (v == null) return;
                                       setState(() {
-                                        horasSelecionadas = v;
-                                        restante = Duration(hours: v);
+                                        model.horasSelecionadas = v;
+                                        model.restante = Duration(hours: v);
                                       });
                                     },
                             ),
@@ -200,13 +262,12 @@ class _SonoState extends State<Sono> {
 
                     const SizedBox(height: 14),
 
-                    // Slider qualidade
                     _CardSection(
                       title: "Qualidade do sono (1–5)",
                       child: Column(
                         children: [
                           Text(
-                            "Qualidade: ${qualidadeSono.round()}/5",
+                            "Qualidade: ${model.qualidadeSono.round()}/5",
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -214,14 +275,15 @@ class _SonoState extends State<Sono> {
                             ),
                           ),
                           Slider(
-                            value: qualidadeSono,
+                            value: model.qualidadeSono,
                             min: 1,
                             max: 5,
                             divisions: 4,
-                            label: qualidadeSono.round().toString(),
-                            onChanged: aDormir
+                            label: model.qualidadeSono.round().toString(),
+                            onChanged: model.aDormir
                                 ? null
-                                : (v) => setState(() => qualidadeSono = v),
+                                : (v) =>
+                                      setState(() => model.qualidadeSono = v),
                           ),
                           const Text(
                             "Escolhe antes de iniciar (fica registado no fim).",
@@ -234,13 +296,12 @@ class _SonoState extends State<Sono> {
 
                     const SizedBox(height: 14),
 
-                    // Temporizador
                     _CardSection(
                       title: "Temporizador",
                       child: Column(
                         children: [
                           Text(
-                            formatar(restante),
+                            controller.formatar(model.restante),
                             style: const TextStyle(
                               fontSize: 44,
                               fontWeight: FontWeight.bold,
@@ -249,37 +310,45 @@ class _SonoState extends State<Sono> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Acordar às ${acordar.hour.toString().padLeft(2, '0')}:${acordar.minute.toString().padLeft(2, '0')}',
+                            'Acordar às $horaAcordar',
                             style: const TextStyle(
                               fontSize: 16,
                               color: Color(0xFF0D47A1),
                             ),
                           ),
                           const SizedBox(height: 14),
-
-                          if (!aDormir)
+                          if (!model.aDormir)
                             Wrap(
                               alignment: WrapAlignment.center,
                               spacing: 12,
                               runSpacing: 10,
                               children: [
                                 ElevatedButton.icon(
-                                  onPressed: iniciarSono,
+                                  onPressed: _iniciarSono,
                                   icon: const Icon(Icons.play_arrow),
                                   label: const Text('Iniciar Sono'),
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: const Color(0xFF0D47A1),
+                                  ),
                                 ),
                                 OutlinedButton.icon(
-                                  onPressed: iniciarSoneca,
+                                  onPressed: _iniciarSoneca,
                                   icon: const Icon(Icons.alarm),
                                   label: const Text('Soneca 20 min'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFF0D47A1),
+                                  ),
                                 ),
                               ],
                             )
                           else
                             ElevatedButton.icon(
-                              onPressed: pararSono,
+                              onPressed: _pararSono,
                               icon: const Icon(Icons.stop),
                               label: const Text('Parar'),
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: const Color(0xFF0D47A1),
+                              ),
                             ),
                         ],
                       ),
@@ -287,10 +356,9 @@ class _SonoState extends State<Sono> {
 
                     const SizedBox(height: 14),
 
-                    // Registo
                     _CardSection(
                       title: "Registo de sono",
-                      child: registoSono.isEmpty
+                      child: model.registoSono.isEmpty
                           ? const Text(
                               "Ainda não terminaste nenhuma sessão.",
                               textAlign: TextAlign.center,
@@ -299,7 +367,7 @@ class _SonoState extends State<Sono> {
                           : ListView.separated(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: registoSono.length,
+                              itemCount: model.registoSono.length,
                               separatorBuilder: (_, __) =>
                                   const Divider(height: 10),
                               itemBuilder: (context, i) {
@@ -309,7 +377,7 @@ class _SonoState extends State<Sono> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   title: Text(
-                                    registoSono[i],
+                                    model.registoSono[i],
                                     style: const TextStyle(
                                       color: Color(0xFF0D47A1),
                                     ),
@@ -319,8 +387,9 @@ class _SonoState extends State<Sono> {
                                       Icons.delete_outline,
                                       color: Color(0xFF1565C0),
                                     ),
-                                    onPressed: () =>
-                                        setState(() => registoSono.removeAt(i)),
+                                    onPressed: () => setState(
+                                      () => model.registoSono.removeAt(i),
+                                    ),
                                   ),
                                 );
                               },
@@ -329,7 +398,6 @@ class _SonoState extends State<Sono> {
 
                     const SizedBox(height: 14),
 
-                    // Dicas
                     _CardSection(
                       title: "Dicas para dormir melhor",
                       child: const Column(
@@ -356,8 +424,6 @@ class _SonoState extends State<Sono> {
   }
 }
 
-// =================== CARD AZUL (IGUAL AO MENU) ===================
-
 class _CardSection extends StatelessWidget {
   final String title;
   final Widget child;
@@ -368,7 +434,7 @@ class _CardSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: const Color(0xFFE3F2FD), // 🔵 azul claro do menu
+      color: const Color(0xFFE3F2FD),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(16),

@@ -14,73 +14,124 @@ class Passos extends StatefulWidget {
   const Passos({super.key, required this.data, required this.idutilizador});
 
   @override
-  State<Passos> createState() => _PassosState();
+  State<Passos> createState() => _PassosPageState();
 }
 
-class _PassosState extends State<Passos> {
-  final _service = getIt<StepCounterService>();
-  StreamSubscription<int>? _stepsSub;
+class PassosModel {
+  int passosHoje;
+  bool running;
+  bool sensorActive;
+  double objetivoPassos;
 
-  int _passosHoje = 0;
-  bool _running = false;
-  bool _sensorActive = false;
+  PassosModel({
+    this.passosHoje = 0,
+    this.running = false,
+    this.sensorActive = false,
+    this.objetivoPassos = 8000,
+  });
 
-  double _objetivoPassos = 8000;
+  double get progresso => (passosHoje / objetivoPassos).clamp(0, 1);
+
+  int get faltam => (objetivoPassos - passosHoje).clamp(0, 999999).round();
+}
+
+class PassosController {
+  final StepCounterService stepService;
+  final StepsRepository stepsRepo;
+  final int idutilizador;
+
+  StreamSubscription<int>? _sub;
+
+  PassosController({
+    required this.stepService,
+    required this.stepsRepo,
+    required this.idutilizador,
+  });
+
+  void ouvirPassos({required void Function(int passos) onPassos}) {
+    _sub = stepService.stepsStream.listen(onPassos);
+  }
+
+  Future<void> start() => stepService.start();
+
+  Future<void> stop() => stepService.stop();
+
+  Future<void> reset() => stepService.reset();
+
+  Future<void> persistir(int passosHoje) async {
+    if (idutilizador != 0) {
+      await stepsRepo.saveSteps(idutilizador, DateTime.now(), passosHoje);
+    }
+  }
+
+  Future<void> close(int passosHoje) async {
+    await persistir(passosHoje);
+    await _sub?.cancel();
+    stepService.dispose();
+  }
+}
+
+class _PassosPageState extends State<Passos> {
+  late final PassosModel model;
+  late final PassosController controller;
 
   @override
   void initState() {
     super.initState();
 
-    _stepsSub = _service.stepsStream.listen((s) {
-      setState(() {
-        _passosHoje = s;
-        _sensorActive = true; // se há eventos, assume sensor
-      });
-    });
+    model = PassosModel();
+
+    controller = PassosController(
+      stepService: getIt<StepCounterService>(),
+      stepsRepo: getIt<StepsRepository>(),
+      idutilizador: widget.idutilizador,
+    );
+
+    controller.ouvirPassos(
+      onPassos: (s) {
+        if (!mounted) return;
+        setState(() {
+          model.passosHoje = s;
+          model.sensorActive = true;
+        });
+      },
+    );
 
     _start();
   }
 
-  double get _progresso => (_passosHoje / _objetivoPassos).clamp(0, 1);
-
-  Future<void> _persistir() async {
-    final repo = getIt<StepsRepository>();
-    if (widget.idutilizador != 0) {
-      await repo.saveSteps(widget.idutilizador, DateTime.now(), _passosHoje);
-    }
-  }
-
   Future<void> _start() async {
-    await _service.start();
-    setState(() => _running = true);
+    await controller.start();
+    if (!mounted) return;
+    setState(() => model.running = true);
   }
 
   Future<void> _stop() async {
-    await _service.stop();
+    await controller.stop();
+    if (!mounted) return;
+
     setState(() {
-      _running = false;
-      _sensorActive = false;
+      model.running = false;
+      model.sensorActive = false;
     });
-    await _persistir();
+
+    await controller.persistir(model.passosHoje);
   }
 
   Future<void> _reset() async {
-    await _service.reset();
-    setState(() => _passosHoje = 0);
+    await controller.reset();
+    if (!mounted) return;
+    setState(() => model.passosHoje = 0);
   }
 
   @override
   void dispose() {
-    _persistir();
-    _stepsSub?.cancel();
-    _service.dispose();
+    controller.close(model.passosHoje);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final faltam = (_objetivoPassos - _passosHoje).clamp(0, 999999).round();
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -135,13 +186,12 @@ class _PassosState extends State<Passos> {
                   children: [
                     const SizedBox(height: 10),
 
-                    // -------- Passos hoje --------
                     _CardSection(
                       title: "Passos hoje",
                       child: Column(
                         children: [
                           Text(
-                            '$_passosHoje',
+                            '${model.passosHoje}',
                             style: const TextStyle(
                               fontSize: 54,
                               fontWeight: FontWeight.w900,
@@ -153,25 +203,27 @@ class _PassosState extends State<Passos> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                _sensorActive ? Icons.sensors : Icons.smart_toy,
+                                model.sensorActive
+                                    ? Icons.sensors
+                                    : Icons.smart_toy,
                                 color: const Color(0xFF1565C0),
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Fonte: ${_sensorActive ? 'Sensor' : 'Simulador'}',
+                                'Fonte: ${model.sensorActive ? 'Sensor' : 'Simulador'}',
                                 style: const TextStyle(fontSize: 16),
                               ),
                             ],
                           ),
                           const SizedBox(height: 14),
                           LinearProgressIndicator(
-                            value: _progresso,
+                            value: model.progresso,
                             backgroundColor: Colors.white,
                             color: const Color(0xFF1565C0),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            "Objetivo: ${_objetivoPassos.round()} • Faltam: $faltam",
+                            "Objetivo: ${model.objetivoPassos.round()} • Faltam: ${model.faltam}",
                           ),
                         ],
                       ),
@@ -179,26 +231,26 @@ class _PassosState extends State<Passos> {
 
                     const SizedBox(height: 14),
 
-                    // -------- Objetivo diário --------
                     _CardSection(
                       title: "Objetivo diário",
                       child: Column(
                         children: [
                           Text(
-                            "Objetivo: ${_objetivoPassos.round()} passos",
+                            "Objetivo: ${model.objetivoPassos.round()} passos",
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           Slider(
-                            value: _objetivoPassos,
+                            value: model.objetivoPassos,
                             min: 2000,
                             max: 20000,
                             divisions: 18,
-                            label: _objetivoPassos.round().toString(),
-                            onChanged: (v) =>
-                                setState(() => _objetivoPassos = v),
+                            label: model.objetivoPassos.round().toString(),
+                            onChanged: (v) {
+                              setState(() => model.objetivoPassos = v);
+                            },
                           ),
                         ],
                       ),
@@ -206,7 +258,6 @@ class _PassosState extends State<Passos> {
 
                     const SizedBox(height: 14),
 
-                    // -------- Controlos --------
                     _CardSection(
                       title: "Controlos",
                       child: Wrap(
@@ -215,19 +266,28 @@ class _PassosState extends State<Passos> {
                         runSpacing: 10,
                         children: [
                           ElevatedButton.icon(
-                            onPressed: _running ? null : _start,
+                            onPressed: model.running ? null : _start,
                             icon: const Icon(Icons.play_arrow),
                             label: const Text('Iniciar'),
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: const Color(0xFF0D47A1),
+                            ),
                           ),
                           ElevatedButton.icon(
-                            onPressed: _running ? _stop : null,
+                            onPressed: model.running ? _stop : null,
                             icon: const Icon(Icons.stop),
                             label: const Text('Parar'),
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: const Color(0xFF0D47A1),
+                            ),
                           ),
                           OutlinedButton.icon(
                             onPressed: _reset,
                             icon: const Icon(Icons.refresh),
                             label: const Text('Reiniciar'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF0D47A1),
+                            ),
                           ),
                           OutlinedButton.icon(
                             onPressed: () {
@@ -242,6 +302,9 @@ class _PassosState extends State<Passos> {
                             },
                             icon: const Icon(Icons.history),
                             label: const Text('Histórico'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF0D47A1),
+                            ),
                           ),
                         ],
                       ),
@@ -259,8 +322,6 @@ class _PassosState extends State<Passos> {
   }
 }
 
-// ================= CARD AZUL (IGUAL AO MENU) =================
-
 class _CardSection extends StatelessWidget {
   final String title;
   final Widget child;
@@ -271,7 +332,7 @@ class _CardSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: const Color(0xFFE3F2FD), // 🔵 azul claro do menu
+      color: const Color(0xFFE3F2FD),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(16),

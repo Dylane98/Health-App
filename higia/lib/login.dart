@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:higia/menu.dart';
 import 'package:higia/recover_password.dart';
+import 'package:higia/main.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Login extends StatefulWidget {
@@ -10,32 +11,70 @@ class Login extends StatefulWidget {
   State<Login> createState() => _LoginState();
 }
 
+/// =====================
+/// MODEL
+/// =====================
+class LoginModel {
+  bool aEntrar;
+  String username;
+  String password;
+
+  LoginModel({this.aEntrar = false, this.username = "", this.password = ""});
+}
+
+/// =====================
+/// CONTROLLER
+/// =====================
+class LoginController {
+  final SupabaseClient client;
+
+  LoginController({required this.client});
+
+  Future<int?> autenticar({
+    required String username,
+    required String password,
+  }) async {
+    final res = await client
+        .from('utilizador')
+        .select('idutilizador')
+        .eq('username', username)
+        .eq('password', password)
+        .limit(1);
+
+    if (res.isNotEmpty) {
+      return res.first['idutilizador'] as int;
+    }
+    return null;
+  }
+}
+
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
-  final _username = TextEditingController();
-  final _password = TextEditingController();
+  final _usernameCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
 
-  bool _aEntrar = false;
+  late final LoginController controller;
+  final LoginModel model = LoginModel();
 
-  static const _azul = Color(0xFF1565C0);
-  static const _azulClaro = Color(0xFFE3F2FD);
+  @override
+  void initState() {
+    super.initState();
+    controller = LoginController(client: Supabase.instance.client);
+  }
 
   @override
   void dispose() {
-    _username.dispose();
-    _password.dispose();
+    _usernameCtrl.dispose();
+    _passwordCtrl.dispose();
     super.dispose();
   }
 
-  void _erroCredenciais() {
+  void _alert(String titulo, String msg) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Erro', textAlign: TextAlign.center),
-        content: const Text(
-          'Credenciais incorretas.',
-          textAlign: TextAlign.center,
-        ),
+        title: Text(titulo, textAlign: TextAlign.center),
+        content: Text(msg, textAlign: TextAlign.center),
         actionsAlignment: MainAxisAlignment.center,
         actions: [
           TextButton(
@@ -47,34 +86,36 @@ class _LoginState extends State<Login> {
     );
   }
 
+  InputDecoration _dec(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: const Color(0xFF1565C0)),
+      filled: true,
+      fillColor: Colors.white.withOpacity(0.9),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+    );
+  }
+
   Future<void> _loginSubmit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    setState(() => _aEntrar = true);
-    final client = Supabase.instance.client;
+    setState(() => model.aEntrar = true);
 
     try {
-      final username = _username.text.trim();
-      final password = _password.text;
-
-      final res = await client
-          .from('utilizador')
-          .select('idutilizador')
-          .eq('username', username)
-          .eq('password', password)
-          .limit(1);
+      final id = await controller.autenticar(
+        username: _usernameCtrl.text.trim(),
+        password: _passwordCtrl.text,
+      );
 
       if (!mounted) return;
 
-      if (res.isNotEmpty) {
-        final id = res.first['idutilizador'] as int;
-
+      if (id != null) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => Menu(idutilizador: id)),
         );
       } else {
-        _erroCredenciais();
+        _alert('Erro', 'Credenciais incorretas.');
       }
     } catch (e) {
       if (!mounted) return;
@@ -82,175 +123,153 @@ class _LoginState extends State<Login> {
         context,
       ).showSnackBar(SnackBar(content: Text('Erro ao iniciar sessão: $e')));
     } finally {
-      if (mounted) setState(() => _aEntrar = false);
+      if (mounted) setState(() => model.aEntrar = false);
     }
-  }
-
-  InputDecoration _dec(String label, IconData icon) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, color: _azul),
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.blueGrey.shade100),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _azul, width: 2),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('images/background2.png'),
-            fit: BoxFit.cover,
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const Homepage()),
+                (route) => false,
+              );
+            },
           ),
         ),
-        child: SafeArea(
-          child: Center(
-            child: SizedBox(
-              width: 520,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 18,
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 10),
-                    Image.asset('images/logo2.png', height: 90),
-                    const SizedBox(height: 18),
+        body: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('images/background2.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: SafeArea(
+            child: Center(
+              child: SizedBox(
+                width: 520,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 18),
+                      Image.asset('images/logo2.png', height: 80),
+                      const SizedBox(height: 18),
 
-                    Card(
-                      elevation: 4,
-                      color: _azulClaro,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(18),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const Text(
-                                'Iniciar sessão',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF0D47A1),
+                      Card(
+                        elevation: 4,
+                        color: const Color(0xFFE3F2FD),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: const [
+                                    Icon(
+                                      Icons.lock_outline,
+                                      color: Color(0xFF0D47A1),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      'Iniciar sessão',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF0D47A1),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(height: 6),
-                              const Text(
-                                'Entra com o teu nome de utilizador e password.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Color(0xFF0D47A1)),
-                              ),
-                              const SizedBox(height: 18),
+                                const SizedBox(height: 16),
 
-                              TextFormField(
-                                controller: _username,
-                                keyboardType: TextInputType.text,
-                                textInputAction: TextInputAction.next,
-                                decoration: _dec(
-                                  'Nome de utilizador',
-                                  Icons.person_outline,
+                                TextFormField(
+                                  controller: _usernameCtrl,
+                                  decoration: _dec(
+                                    'Nome de utilizador',
+                                    Icons.person_outline,
+                                  ),
+                                  validator: (v) =>
+                                      (v == null || v.trim().isEmpty)
+                                      ? 'Indica o nome de utilizador'
+                                      : null,
                                 ),
-                                validator: (v) =>
-                                    (v == null || v.trim().isEmpty)
-                                    ? 'Indicar o nome de utilizador'
-                                    : null,
-                              ),
-                              const SizedBox(height: 12),
+                                const SizedBox(height: 12),
 
-                              TextFormField(
-                                controller: _password,
-                                keyboardType: TextInputType.visiblePassword,
-                                textInputAction: TextInputAction.done,
-                                obscureText: true,
-                                onFieldSubmitted: (_) =>
-                                    _aEntrar ? null : _loginSubmit(),
-                                decoration: _dec(
-                                  'Password',
-                                  Icons.lock_outline,
+                                TextFormField(
+                                  controller: _passwordCtrl,
+                                  decoration: _dec(
+                                    'Password',
+                                    Icons.key_outlined,
+                                  ),
+                                  obscureText: true,
+                                  validator: (v) => (v == null || v.isEmpty)
+                                      ? 'Indica a password'
+                                      : null,
                                 ),
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? 'Indicar a password'
-                                    : null,
-                              ),
+                                const SizedBox(height: 20),
 
-                              const SizedBox(height: 10),
-
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: _aEntrar
-                                      ? null
-                                      : () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) =>
-                                                  const Recoverpassword(),
-                                            ),
-                                          );
-                                        },
-                                  child: const Text(
-                                    'Recuperar password',
-                                    style: TextStyle(color: _azul),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: model.aEntrar
+                                        ? null
+                                        : _loginSubmit,
+                                    icon: const Icon(Icons.login),
+                                    label: Text(
+                                      model.aEntrar
+                                          ? 'A entrar...'
+                                          : 'Iniciar sessão',
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      foregroundColor: const Color(0xFF0D47A1),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
 
-                              const SizedBox(height: 6),
+                                const SizedBox(height: 10),
 
-                              ElevatedButton(
-                                onPressed: _aEntrar ? null : _loginSubmit,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _azul,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const Recoverpassword(),
+                                      ),
+                                    );
+                                  },
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF0D47A1),
                                   ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
+                                  child: const Text('Recuperar Password'),
                                 ),
-                                child: Text(
-                                  _aEntrar ? 'A entrar...' : 'Iniciar sessão',
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // Pequena nota (opcional)
-                    const Text(
-                      'HIGIA • Cuida de ti todos os dias',
-                      style: TextStyle(
-                        color: Color(0xFF0D47A1),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

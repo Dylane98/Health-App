@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:higia/menu.dart';
 import 'package:higia/services/service_locator.dart';
 import 'package:higia/services/steps_repository.dart';
 
@@ -11,74 +10,83 @@ class StepsHistory extends StatefulWidget {
   State<StepsHistory> createState() => _StepsHistoryState();
 }
 
+/* =======================
+   MODEL
+======================= */
+class StepsHistoryModel {
+  bool loading;
+  String? error;
+  List<Map<String, dynamic>> rows;
+
+  StepsHistoryModel({this.loading = true, this.error, this.rows = const []});
+}
+
+/* =======================
+   CONTROLLER
+======================= */
+class StepsHistoryController {
+  final StepsRepository repo;
+
+  StepsHistoryController({required this.repo});
+
+  Future<List<Map<String, dynamic>>> carregar(int idutilizador) {
+    return repo.fetchSteps(idutilizador);
+  }
+
+  String formatarData(dynamic raw) {
+    if (raw == null) return "-";
+
+    final parsed = DateTime.tryParse(raw.toString());
+    if (parsed == null) return "-";
+
+    const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+    String dois(int n) => n.toString().padLeft(2, '0');
+
+    final diaSemana = dias[parsed.weekday % 7];
+    final data = "${dois(parsed.day)}/${dois(parsed.month)}/${parsed.year}";
+
+    return "$diaSemana, $data";
+  }
+}
+
+/* =======================
+   UI
+======================= */
 class _StepsHistoryState extends State<StepsHistory> {
-  List<Map<String, dynamic>> _rows = [];
-  bool _loading = true;
-  String? _error;
+  late final StepsHistoryController controller;
+  final StepsHistoryModel model = StepsHistoryModel();
 
   @override
   void initState() {
     super.initState();
+    controller = StepsHistoryController(repo: getIt<StepsRepository>());
     _load();
-  }
-
-  DateTime? _parseDate(dynamic v) {
-    if (v == null) return null;
-    if (v is DateTime) return v;
-    final s = v.toString().trim();
-    if (s.isEmpty) return null;
-    return DateTime.tryParse(s);
-  }
-
-  String _fmtDatePt(DateTime? d) {
-    if (d == null) return "-";
-    String dois(int n) => n.toString().padLeft(2, '0');
-    return "${dois(d.day)}/${dois(d.month)}/${d.year}  ${dois(d.hour)}:${dois(d.minute)}";
-  }
-
-  int _toInt(dynamic v) {
-    if (v is int) return v;
-    return int.tryParse(v?.toString() ?? "") ?? 0;
   }
 
   Future<void> _load() async {
     setState(() {
-      _loading = true;
-      _error = null;
+      model.loading = true;
+      model.error = null;
     });
 
     try {
-      final stepsRepo = getIt<StepsRepository>();
-      final rows = await stepsRepo.fetchSteps(widget.idutilizador);
+      final rows = await controller.carregar(widget.idutilizador);
+      if (!mounted) return;
 
-      // ordenar por data desc (mais recente primeiro)
-      rows.sort((a, b) {
-        final da =
-            _parseDate(a['created_at']) ??
-            DateTime.fromMillisecondsSinceEpoch(0);
-        final db =
-            _parseDate(b['created_at']) ??
-            DateTime.fromMillisecondsSinceEpoch(0);
-        return db.compareTo(da);
+      setState(() {
+        model.rows = rows;
+        model.loading = false;
       });
-
+    } catch (_) {
       if (!mounted) return;
       setState(() {
-        _rows = rows;
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.toString();
-        _loading = false;
+        model.error =
+            "Não foi possível carregar o histórico.\nTenta novamente.";
+        model.loading = false;
       });
     }
   }
-
-  int get _totalPassos =>
-      _rows.fold<int>(0, (sum, r) => sum + _toInt(r['passos']));
-  int get _media => _rows.isEmpty ? 0 : (_totalPassos / _rows.length).round();
 
   @override
   Widget build(BuildContext context) {
@@ -88,20 +96,9 @@ class _StepsHistoryState extends State<StepsHistory> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text('Histórico de passos'),
-        leading: IconButton(
-          icon: const Icon(Icons.home),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => Menu(idutilizador: widget.idutilizador),
-              ),
-            );
-          },
-        ),
         actions: [
           IconButton(
-            tooltip: "Atualizar",
+            tooltip: 'Atualizar',
             icon: const Icon(Icons.refresh),
             onPressed: _load,
           ),
@@ -119,77 +116,8 @@ class _StepsHistoryState extends State<StepsHistory> {
             child: SizedBox(
               width: 520,
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 10,
-                ),
-                child: _loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _error != null
-                    ? _ErrorCard(
-                        mensagem:
-                            "Não foi possível carregar o histórico.\n$_error",
-                        onRetry: _load,
-                      )
-                    : _rows.isEmpty
-                    ? const _EmptyCard(texto: "Nenhum registo ainda.")
-                    : RefreshIndicator(
-                        onRefresh: _load,
-                        child: ListView(
-                          children: [
-                            _CardSection(
-                              title: "Resumo",
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  _StatBox(
-                                    label: "Registos",
-                                    value: "${_rows.length}",
-                                  ),
-                                  _StatBox(
-                                    label: "Total",
-                                    value: "$_totalPassos",
-                                  ),
-                                  _StatBox(label: "Média", value: "$_media"),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            _CardSection(
-                              title: "Registos",
-                              child: ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _rows.length,
-                                separatorBuilder: (_, __) =>
-                                    const Divider(height: 12),
-                                itemBuilder: (context, idx) {
-                                  final row = _rows[idx];
-                                  final dt = _parseDate(row['created_at']);
-                                  final steps = _toInt(row['passos']);
-
-                                  return ListTile(
-                                    tileColor: Colors.white.withOpacity(0.75),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    leading: const Icon(Icons.directions_walk),
-                                    title: Text(
-                                      "$steps passos",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    subtitle: Text(_fmtDatePt(dt)),
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                          ],
-                        ),
-                      ),
+                padding: const EdgeInsets.all(16),
+                child: _buildBody(),
               ),
             ),
           ),
@@ -197,61 +125,100 @@ class _StepsHistoryState extends State<StepsHistory> {
       ),
     );
   }
+
+  Widget _buildBody() {
+    if (model.loading) {
+      return const _LoadingCard();
+    }
+
+    if (model.error != null) {
+      return _ErrorCard(mensagem: model.error!, onRetry: _load);
+    }
+
+    if (model.rows.isEmpty) {
+      return const _EmptyCard();
+    }
+
+    return _HistoryList(
+      rows: model.rows,
+      formatarData: controller.formatarData,
+    );
+  }
 }
 
-class _CardSection extends StatelessWidget {
-  final String title;
-  final Widget child;
+/* =======================
+   COMPONENTES
+======================= */
+class _HistoryList extends StatelessWidget {
+  final List<Map<String, dynamic>> rows;
+  final String Function(dynamic raw) formatarData;
 
-  const _CardSection({required this.title, required this.child});
+  const _HistoryList({required this.rows, required this.formatarData});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: Colors.white.withOpacity(0.85),
+      color: const Color(0xFFE3F2FD),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(12),
+        itemCount: rows.length,
+        separatorBuilder: (_, __) => const Divider(height: 10),
+        itemBuilder: (context, index) {
+          final row = rows[index];
+          final passos = row['passos'] ?? 0;
+          final data = formatarData(row['created_at']);
+
+          return ListTile(
+            tileColor: Colors.white.withOpacity(0.8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 12),
-            child,
-          ],
-        ),
+            leading: const Icon(
+              Icons.directions_walk,
+              color: Color(0xFF1565C0),
+            ),
+            title: Text(
+              '$passos passos',
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0D47A1),
+              ),
+            ),
+            subtitle: Text(
+              data,
+              style: const TextStyle(color: Color(0xFF0D47A1)),
+            ),
+          );
+        },
       ),
     );
   }
 }
 
-class _StatBox extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _StatBox({required this.label, required this.value});
+class _LoadingCard extends StatelessWidget {
+  const _LoadingCard();
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 6),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.75),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
+    return Card(
+      elevation: 4,
+      color: const Color(0xFFE3F2FD),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: const Padding(
+        padding: EdgeInsets.all(18),
+        child: Row(
           children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 6),
+            SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 14),
             Text(
-              value,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              'A carregar histórico...',
+              style: TextStyle(color: Color(0xFF0D47A1)),
             ),
           ],
         ),
@@ -261,18 +228,26 @@ class _StatBox extends StatelessWidget {
 }
 
 class _EmptyCard extends StatelessWidget {
-  final String texto;
-  const _EmptyCard({required this.texto});
+  const _EmptyCard();
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: Colors.white.withOpacity(0.85),
+      color: const Color(0xFFE3F2FD),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Center(child: Text(texto)),
+      child: const Padding(
+        padding: EdgeInsets.all(18),
+        child: Center(
+          child: Text(
+            'Nenhum registo.',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF0D47A1),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -288,20 +263,27 @@ class _ErrorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: Colors.white.withOpacity(0.85),
+      color: const Color(0xFFE3F2FD),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
           children: [
-            const Icon(Icons.error_outline, size: 36),
+            const Icon(Icons.error_outline, size: 36, color: Color(0xFF0D47A1)),
             const SizedBox(height: 10),
-            Text(mensagem, textAlign: TextAlign.center),
+            Text(
+              mensagem,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Color(0xFF0D47A1)),
+            ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text("Tentar novamente"),
+              label: const Text('Tentar novamente'),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: const Color(0xFF0D47A1),
+              ),
             ),
           ],
         ),
