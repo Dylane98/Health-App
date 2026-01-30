@@ -15,7 +15,6 @@ class Saude extends StatefulWidget {
 
 class _SaudeState extends State<Saude> {
   final UserService _userService = UserService();
-
   late Future<RegistrationData?> _future;
 
   @override
@@ -110,13 +109,11 @@ class _SaudeState extends State<Saude> {
                     FutureBuilder<RegistrationData?>(
                       future: _future,
                       builder: (context, snapshot) {
-                        // Loading
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
                           return const _LoadingCard();
                         }
 
-                        // Erro
                         if (snapshot.hasError) {
                           return _ErrorCard(
                             mensagem:
@@ -125,7 +122,6 @@ class _SaudeState extends State<Saude> {
                           );
                         }
 
-                        // Dados (com fallback para os dados locais)
                         final fetched = snapshot.data;
                         final effective = fetched ?? widget.data;
 
@@ -182,8 +178,6 @@ class _SaudeState extends State<Saude> {
                               ),
                             ),
                             const SizedBox(height: 14),
-
-                            // Widget extra: pequena dica contextual (sem BD extra)
                             _CardSection(
                               title: "Dica",
                               child: Text(
@@ -211,6 +205,8 @@ class _SaudeState extends State<Saude> {
   }
 }
 
+// =================== CARD AZUL (IGUAL AO MENU) ===================
+
 class _CardSection extends StatelessWidget {
   final String title;
   final Widget child;
@@ -221,7 +217,7 @@ class _CardSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: Colors.white.withOpacity(0.85),
+      color: const Color(0xFFE3F2FD), // 🔵 azul claro
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -230,7 +226,11 @@ class _CardSection extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0D47A1),
+              ),
             ),
             const SizedBox(height: 12),
             child,
@@ -258,15 +258,22 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon),
+          Icon(icon, color: const Color(0xFF1565C0)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF0D47A1),
+              ),
             ),
           ),
-          Text(value, style: const TextStyle(fontSize: 16)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 16, color: Color(0xFF0D47A1)),
+          ),
         ],
       ),
     );
@@ -280,7 +287,7 @@ class _LoadingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: Colors.white.withOpacity(0.85),
+      color: const Color(0xFFE3F2FD),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: const Padding(
         padding: EdgeInsets.all(18),
@@ -292,7 +299,10 @@ class _LoadingCard extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             SizedBox(width: 14),
-            Text("A carregar dados..."),
+            Text(
+              "A carregar dados...",
+              style: TextStyle(color: Color(0xFF0D47A1)),
+            ),
           ],
         ),
       ),
@@ -310,15 +320,19 @@ class _ErrorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: Colors.white.withOpacity(0.85),
+      color: const Color(0xFFE3F2FD),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
           children: [
-            const Icon(Icons.error_outline, size: 36),
+            const Icon(Icons.error_outline, size: 36, color: Color(0xFF0D47A1)),
             const SizedBox(height: 10),
-            Text(mensagem, textAlign: TextAlign.center),
+            Text(
+              mensagem,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Color(0xFF0D47A1)),
+            ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: onRetry,

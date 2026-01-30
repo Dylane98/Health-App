@@ -72,7 +72,6 @@ class _RelaxamentoState extends State<Relaxamento> {
   }
 
   void _terminou() {
-    // guarda no registo
     final agora = TimeOfDay.now();
     final hh = agora.hour.toString().padLeft(2, '0');
     final mm = agora.minute.toString().padLeft(2, '0');
@@ -161,6 +160,7 @@ class _RelaxamentoState extends State<Relaxamento> {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
+                              color: Color(0xFF0D47A1),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -170,6 +170,7 @@ class _RelaxamentoState extends State<Relaxamento> {
                             style: const TextStyle(
                               fontSize: 44,
                               fontWeight: FontWeight.w800,
+                              color: Color(0xFF0D47A1),
                             ),
                           ),
                           const SizedBox(height: 14),
@@ -226,22 +227,30 @@ class _RelaxamentoState extends State<Relaxamento> {
                               s.titulo,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
+                                color: Color(0xFF0D47A1),
                               ),
                             ),
                             subtitle: Text(
                               "${s.descricao}\nDuração: ${s.duracao.inMinutes} min",
+                              style: const TextStyle(color: Color(0xFF0D47A1)),
                             ),
                             isThreeLine: true,
                             onTap: () {
-                              if (aDecorrer) return; // evita mudar a meio
+                              if (aDecorrer) return;
                               setState(() {
                                 tituloSessao = s.titulo;
                                 restante = s.duracao;
                               });
                             },
                             trailing: aDecorrer
-                                ? const Icon(Icons.lock_outline)
-                                : const Icon(Icons.chevron_right),
+                                ? const Icon(
+                                    Icons.lock_outline,
+                                    color: Color(0xFF1565C0),
+                                  )
+                                : const Icon(
+                                    Icons.chevron_right,
+                                    color: Color(0xFF1565C0),
+                                  ),
                           );
                         }).toList(),
                       ),
@@ -294,6 +303,8 @@ class _SessaoRelax {
   });
 }
 
+// =================== CARD AZUL (IGUAL AO MENU) ===================
+
 class _CardSection extends StatelessWidget {
   final String title;
   final Widget child;
@@ -304,7 +315,7 @@ class _CardSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: Colors.white.withOpacity(0.85),
+      color: const Color(0xFFE3F2FD), // 🔵 azul claro
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -313,7 +324,11 @@ class _CardSection extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0D47A1),
+              ),
             ),
             const SizedBox(height: 12),
             child,
@@ -334,9 +349,11 @@ class _TipLine extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          const Icon(Icons.self_improvement),
+          const Icon(Icons.self_improvement, color: Color(0xFF1565C0)),
           const SizedBox(width: 10),
-          Expanded(child: Text(text)),
+          Expanded(
+            child: Text(text, style: const TextStyle(color: Color(0xFF0D47A1))),
+          ),
         ],
       ),
     );

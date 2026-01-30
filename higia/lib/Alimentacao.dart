@@ -100,14 +100,18 @@ class _AlimentacaoState extends State<Alimentacao> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Água (offline)
+                    // Água
                     _CardSection(
                       title: "Hidratação",
                       child: Column(
                         children: [
                           Text(
                             "Copos de água hoje: $coposAgua",
-                            style: const TextStyle(fontSize: 18),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              color: Color(0xFF0D47A1),
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Row(
@@ -134,25 +138,27 @@ class _AlimentacaoState extends State<Alimentacao> {
 
                     const SizedBox(height: 14),
 
-                    // Plano do dia (sugestões)
+                    // Plano do dia
                     _CardSection(
                       title: "Plano do dia (sugestões)",
                       child: Column(
-                        children: refeicoes.map((r) {
-                          return _MealTile(
-                            emoji: r["icone"] ?? "🍽️",
-                            title: r["titulo"] ?? "",
-                            subtitle: r["sub"] ?? "",
-                          );
-                        }).toList(),
+                        children: refeicoes
+                            .map(
+                              (r) => _MealTile(
+                                emoji: r["icone"] ?? "🍽️",
+                                title: r["titulo"] ?? "",
+                                subtitle: r["sub"] ?? "",
+                              ),
+                            )
+                            .toList(),
                       ),
                     ),
 
                     const SizedBox(height: 14),
 
-                    // Registo rápido (offline)
+                    // Registo
                     _CardSection(
-                      title: "Registo rápido (sem BD)",
+                      title: "Registo rápido",
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -174,11 +180,11 @@ class _AlimentacaoState extends State<Alimentacao> {
                             child: const Text("Adicionar ao registo"),
                           ),
                           const SizedBox(height: 12),
-
                           if (registoHoje.isEmpty)
                             const Text(
                               "Ainda não registaste nada hoje.",
                               textAlign: TextAlign.center,
+                              style: TextStyle(color: Color(0xFF0D47A1)),
                             )
                           else
                             ListView.separated(
@@ -195,10 +201,19 @@ class _AlimentacaoState extends State<Alimentacao> {
                                   ),
                                   leading: const Icon(
                                     Icons.check_circle_outline,
+                                    color: Color(0xFF1565C0),
                                   ),
-                                  title: Text(registoHoje[index]),
+                                  title: Text(
+                                    registoHoje[index],
+                                    style: const TextStyle(
+                                      color: Color(0xFF0D47A1),
+                                    ),
+                                  ),
                                   trailing: IconButton(
-                                    icon: const Icon(Icons.delete_outline),
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Color(0xFF1565C0),
+                                    ),
                                     onPressed: () => removerDoRegisto(index),
                                   ),
                                 );
@@ -210,11 +225,11 @@ class _AlimentacaoState extends State<Alimentacao> {
 
                     const SizedBox(height: 14),
 
-                    // Dicas rápidas (offline)
+                    // Dicas rápidas
                     _CardSection(
                       title: "Dicas rápidas",
-                      child: Column(
-                        children: const [
+                      child: const Column(
+                        children: [
                           _TipLine(text: "✅ Metade do prato: legumes/salada"),
                           _TipLine(
                             text:
@@ -243,6 +258,8 @@ class _AlimentacaoState extends State<Alimentacao> {
   }
 }
 
+// =================== CARD AZUL (IGUAL AO MENU) ===================
+
 class _CardSection extends StatelessWidget {
   final String title;
   final Widget child;
@@ -253,7 +270,7 @@ class _CardSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: Colors.white.withOpacity(0.85),
+      color: const Color(0xFFE3F2FD), // 🔵 azul claro
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -262,7 +279,11 @@ class _CardSection extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0D47A1),
+              ),
             ),
             const SizedBox(height: 12),
             child,
@@ -289,8 +310,18 @@ class _MealTile extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       leading: Text(emoji, style: const TextStyle(fontSize: 26)),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF0D47A1),
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: Color(0xFF0D47A1)),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: Color(0xFF1565C0)),
     );
   }
 }
@@ -305,9 +336,11 @@ class _TipLine extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          const Icon(Icons.lightbulb_outline),
+          const Icon(Icons.lightbulb_outline, color: Color(0xFF1565C0)),
           const SizedBox(width: 10),
-          Expanded(child: Text(text)),
+          Expanded(
+            child: Text(text, style: const TextStyle(color: Color(0xFF0D47A1))),
+          ),
         ],
       ),
     );

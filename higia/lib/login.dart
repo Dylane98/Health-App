@@ -17,6 +17,9 @@ class _LoginState extends State<Login> {
 
   bool _aEntrar = false;
 
+  static const _azul = Color(0xFF1565C0);
+  static const _azulClaro = Color(0xFFE3F2FD);
+
   @override
   void dispose() {
     _username.dispose();
@@ -75,112 +78,178 @@ class _LoginState extends State<Login> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao iniciar sessão: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao iniciar sessão: $e')));
     } finally {
       if (mounted) setState(() => _aEntrar = false);
     }
   }
 
+  InputDecoration _dec(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: _azul),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.blueGrey.shade100),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: _azul, width: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('images/background2.png'),
-              fit: BoxFit.cover,
-            ),
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('images/background2.png'),
+            fit: BoxFit.cover,
           ),
+        ),
+        child: SafeArea(
           child: Center(
             child: SizedBox(
-              width: 500,
-              child: Form(
-                key: _formKey,
+              width: 520,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 18,
+                ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Limit the field width so the underline is not full-width
-                    SizedBox(
-                      width: 300,
-                      child: TextFormField(
-                        controller: _username,
-                        keyboardType: TextInputType.text,
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
-                          enabledBorder: const UnderlineInputBorder(
-                            borderSide: BorderSide(width: 1.2),
-                          ),
-                          focusedBorder: const UnderlineInputBorder(
-                            borderSide: BorderSide(width: 2.0),
-                          ),
-                          labelText: 'Nome de utilizador',
-                          alignLabelWithHint: true,
-                        ),
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Indicar o nome de utilizador'
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: 300,
-                      child: TextFormField(
-                        controller: _password,
-                        keyboardType: TextInputType.visiblePassword,
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
-                          enabledBorder: const UnderlineInputBorder(
-                            borderSide: BorderSide(width: 1.2),
-                          ),
-                          focusedBorder: const UnderlineInputBorder(
-                            borderSide: BorderSide(width: 2.0),
-                          ),
-                          labelText: 'Password',
-                          alignLabelWithHint: true,
-                        ),
-                        obscureText: true,
-                        validator: (v) =>
-                            (v == null || v.isEmpty) ? 'Indicar a password' : null,
-                      ),
-                    ),
-                    const SizedBox(height: 80),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.blue,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const Recoverpassword(),
-                              ),
-                            );
-                          },
+                    const SizedBox(height: 10),
+                    Image.asset('images/logo2.png', height: 90),
+                    const SizedBox(height: 18),
 
-                          child: const Text('Recuperar Password'),
-                        ),
-                        ElevatedButton(
-                          onPressed: _aEntrar ? null : _loginSubmit,
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.blue,
+                    Card(
+                      elevation: 4,
+                      color: _azulClaro,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text(
+                                'Iniciar sessão',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF0D47A1),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'Entra com o teu nome de utilizador e password.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Color(0xFF0D47A1)),
+                              ),
+                              const SizedBox(height: 18),
+
+                              TextFormField(
+                                controller: _username,
+                                keyboardType: TextInputType.text,
+                                textInputAction: TextInputAction.next,
+                                decoration: _dec(
+                                  'Nome de utilizador',
+                                  Icons.person_outline,
+                                ),
+                                validator: (v) =>
+                                    (v == null || v.trim().isEmpty)
+                                    ? 'Indicar o nome de utilizador'
+                                    : null,
+                              ),
+                              const SizedBox(height: 12),
+
+                              TextFormField(
+                                controller: _password,
+                                keyboardType: TextInputType.visiblePassword,
+                                textInputAction: TextInputAction.done,
+                                obscureText: true,
+                                onFieldSubmitted: (_) =>
+                                    _aEntrar ? null : _loginSubmit(),
+                                decoration: _dec(
+                                  'Password',
+                                  Icons.lock_outline,
+                                ),
+                                validator: (v) => (v == null || v.isEmpty)
+                                    ? 'Indicar a password'
+                                    : null,
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: _aEntrar
+                                      ? null
+                                      : () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const Recoverpassword(),
+                                            ),
+                                          );
+                                        },
+                                  child: const Text(
+                                    'Recuperar password',
+                                    style: TextStyle(color: _azul),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              ElevatedButton(
+                                onPressed: _aEntrar ? null : _loginSubmit,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _azul,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: Text(
+                                  _aEntrar ? 'A entrar...' : 'Iniciar sessão',
+                                ),
+                              ),
+                            ],
                           ),
-                          child: Text(
-                            _aEntrar ? 'A entrar...' : 'Iniciar sessão',
-                          ),
                         ),
-                      ],
+                      ),
                     ),
+
+                    const SizedBox(height: 14),
+
+                    // Pequena nota (opcional)
+                    const Text(
+                      'HIGIA • Cuida de ti todos os dias',
+                      style: TextStyle(
+                        color: Color(0xFF0D47A1),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                   ],
                 ),
               ),

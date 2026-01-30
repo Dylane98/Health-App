@@ -12,7 +12,7 @@ class Objpeso extends StatefulWidget {
 
 class _ObjpesoState extends State<Objpeso> {
   String? peso;
-late final int idutilizador;
+
   @override
   void initState() {
     super.initState();
@@ -27,9 +27,40 @@ late final int idutilizador;
     );
   }
 
+  Widget _radio({
+    required String title,
+    required String value,
+    required IconData icon,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.85),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: RadioListTile<String>(
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF0D47A1),
+          ),
+        ),
+        secondary: Icon(icon, color: const Color(0xFF1565C0)),
+        value: value,
+        groupValue: peso,
+        onChanged: (v) => setState(() => peso = v),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        activeColor: const Color(0xFF1565C0),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -37,73 +68,137 @@ late final int idutilizador;
             fit: BoxFit.cover,
           ),
         ),
-        child: Center(
-          child: SizedBox(
-            width: 500,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset('images/logo2.png', height: 60, width: 120),
-                const SizedBox(height: 48),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Tem algum objetivo relacionado com o peso?',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 32),
-                      RadioListTile<String>(
-                        title: const Text('Perder peso'),
-                        value: 'perderPeso',
-                        groupValue: peso,
-                        contentPadding: EdgeInsets.zero,
-                        onChanged: (value) => setState(() => peso = value),
-                      ),
-                      RadioListTile<String>(
-                        title: const Text('Manter peso'),
-                        value: 'manterPeso',
-                        groupValue: peso,
-                        contentPadding: EdgeInsets.zero,
-                        onChanged: (value) => setState(() => peso = value),
-                      ),
-                      RadioListTile<String>(
-                        title: const Text('Ganhar peso'),
-                        value: 'ganharPeso',
-                        groupValue: peso,
-                        contentPadding: EdgeInsets.zero,
-                        onChanged: (value) => setState(() => peso = value),
-                      ),
-                      RadioListTile<String>(
-                        title: const Text('Sem objetivo'),
-                        value: 'semObjetivo',
-                        groupValue: peso,
-                        contentPadding: EdgeInsets.zero,
-                        onChanged: (value) => setState(() => peso = value),
-                      ),
-                    ],
-                  ),
+        child: SafeArea(
+          child: Center(
+            child: SizedBox(
+              width: 520,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
                 ),
-                const SizedBox(height: 48),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                child: Column(
                   children: [
-                    TextButton(
-                      style: TextButton.styleFrom(foregroundColor: Colors.blue),
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Anterior'),
+                    const SizedBox(height: 6),
+                    Image.asset('images/logo2.png', width: 190),
+                    const SizedBox(height: 18),
+
+                    // Cabeçalho
+                    Card(
+                      elevation: 4,
+                      color: const Color(0xFFE3F2FD),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: const [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.monitor_weight_outlined,
+                                  color: Color(0xFF1565C0),
+                                ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    "Objetivo de peso",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF0D47A1),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "Tem algum objetivo relacionado com o peso?",
+                              style: TextStyle(color: Color(0xFF0D47A1)),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    ElevatedButton(
-                      onPressed: _next,
-                      style: ElevatedButton.styleFrom(foregroundColor: Colors.blue),
-                      child: const Text('Seguinte'),
+
+                    const SizedBox(height: 14),
+
+                    // Opções
+                    Card(
+                      elevation: 4,
+                      color: const Color(0xFFE3F2FD),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          children: [
+                            _radio(
+                              title: "Perder peso",
+                              value: "perderPeso",
+                              icon: Icons.trending_down,
+                            ),
+                            _radio(
+                              title: "Manter peso",
+                              value: "manterPeso",
+                              icon: Icons.horizontal_rule,
+                            ),
+                            _radio(
+                              title: "Ganhar peso",
+                              value: "ganharPeso",
+                              icon: Icons.trending_up,
+                            ),
+                            _radio(
+                              title: "Sem objetivo",
+                              value: "semObjetivo",
+                              icon: Icons.not_interested,
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            // Botões
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TextButton.icon(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF1565C0),
+                                  ),
+                                  onPressed: () => Navigator.pop(context),
+                                  icon: const Icon(Icons.arrow_back),
+                                  label: const Text('Anterior'),
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: _next,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF1565C0),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 18,
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.arrow_forward),
+                                  label: const Text('Seguinte'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
+
+                    const SizedBox(height: 18),
                   ],
-                )
-              ],
+                ),
+              ),
             ),
           ),
         ),

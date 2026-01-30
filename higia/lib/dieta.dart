@@ -18,7 +18,6 @@ class _DietaState extends State<Dieta> {
   late bool carne;
   late bool peixe;
 
-  late final int idutilizador;
   @override
   void initState() {
     super.initState();
@@ -44,6 +43,27 @@ class _DietaState extends State<Dieta> {
     );
   }
 
+  Widget _check({
+    required String text,
+    required bool value,
+    required ValueChanged<bool?> onChanged,
+  }) {
+    return CheckboxListTile(
+      contentPadding: EdgeInsets.zero,
+      activeColor: const Color(0xFF1565C0),
+      title: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF0D47A1),
+        ),
+      ),
+      value: value,
+      onChanged: onChanged,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,82 +74,117 @@ class _DietaState extends State<Dieta> {
             fit: BoxFit.cover,
           ),
         ),
-        child: Center(
-          child: SizedBox(
-            width: 500,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset('images/logo2.png', height: 60, width: 120),
-                SizedBox(height: 32),
-                const Text(
-                  'Indique o seu tipo de dieta',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        child: SafeArea(
+          child: Center(
+            child: SizedBox(
+              width: 520,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 20,
                 ),
-                const SizedBox(height: 16),
-
-                CheckboxListTile(
-                  tristate: false,
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Alimentação variada'),
-                  value: alimentacaoVariada,
-                  onChanged: (v) =>
-                      setState(() => alimentacaoVariada = v ?? false),
-                ),
-                CheckboxListTile(
-                  tristate: false,
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Vegetariano'),
-                  value: vegetariano,
-                  onChanged: (v) => setState(() => vegetariano = v ?? false),
-                ),
-                CheckboxListTile(
-                  tristate: false,
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Sem lactose'),
-                  value: semLactose,
-                  onChanged: (v) => setState(() => semLactose = v ?? false),
-                ),
-                CheckboxListTile(
-                  tristate: false,
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Sem glúten'),
-                  value: semGluten,
-                  onChanged: (v) => setState(() => semGluten = v ?? false),
-                ),
-                CheckboxListTile(
-                  tristate: false,
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Carne'),
-                  value: carne,
-                  onChanged: (v) => setState(() => carne = v ?? false),
-                ),
-                CheckboxListTile(
-                  tristate: false,
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Peixe'),
-                  value: peixe,
-                  onChanged: (v) => setState(() => peixe = v ?? false),
-                ),
-                SizedBox(height: 48),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                child: Column(
                   children: [
-                    TextButton(
-                      style: TextButton.styleFrom(foregroundColor: Colors.blue),
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Anterior'),
-                    ),
-                    ElevatedButton(
-                      onPressed: _seguinte,
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.blue,
+                    Image.asset('images/logo2.png', height: 80),
+                    const SizedBox(height: 24),
+
+                    // ---------- CARD PRINCIPAL ----------
+                    Card(
+                      elevation: 4,
+                      color: const Color(0xFFE3F2FD), // 🔵 azul do menu
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
                       ),
-                      child: const Text('Seguinte'),
+                      child: Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text(
+                              'Indique o seu tipo de dieta',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0D47A1),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            _check(
+                              text: 'Alimentação variada',
+                              value: alimentacaoVariada,
+                              onChanged: (v) => setState(
+                                () => alimentacaoVariada = v ?? false,
+                              ),
+                            ),
+                            _check(
+                              text: 'Vegetariano',
+                              value: vegetariano,
+                              onChanged: (v) =>
+                                  setState(() => vegetariano = v ?? false),
+                            ),
+                            _check(
+                              text: 'Sem lactose',
+                              value: semLactose,
+                              onChanged: (v) =>
+                                  setState(() => semLactose = v ?? false),
+                            ),
+                            _check(
+                              text: 'Sem glúten',
+                              value: semGluten,
+                              onChanged: (v) =>
+                                  setState(() => semGluten = v ?? false),
+                            ),
+                            _check(
+                              text: 'Carne',
+                              value: carne,
+                              onChanged: (v) =>
+                                  setState(() => carne = v ?? false),
+                            ),
+                            _check(
+                              text: 'Peixe',
+                              value: peixe,
+                              onChanged: (v) =>
+                                  setState(() => peixe = v ?? false),
+                            ),
+
+                            const SizedBox(height: 28),
+
+                            // ---------- BOTÕES ----------
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text(
+                                    'Anterior',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Color(0xFF1565C0),
+                                    ),
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: _seguinte,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF1565C0),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text('Seguinte'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

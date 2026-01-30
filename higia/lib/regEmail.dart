@@ -22,19 +22,6 @@ class _RegEmailPageState extends State<RegEmailPage> {
   bool _guarda = false;
   final userService = getIt<UserService>();
 
-  // Helper: deeply serialize DateTime objects in maps/lists to ISO strings
-  dynamic _serializeForSupabase(dynamic value) {
-    if (value == null) return null;
-    if (value is DateTime) return value.toIso8601String();
-    if (value is Map) {
-      return value.map((k, v) => MapEntry(k.toString(), _serializeForSupabase(v)));
-    }
-    if (value is List) {
-      return value.map((e) => _serializeForSupabase(e)).toList();
-    }
-    return value;
-  }
-
   @override
   void dispose() {
     _username.dispose();
@@ -42,6 +29,24 @@ class _RegEmailPageState extends State<RegEmailPage> {
     _password.dispose();
     _confpassword.dispose();
     super.dispose();
+  }
+
+  InputDecoration _dec(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: const Color(0xFF1565C0)),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.blueGrey.shade100),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFF1565C0), width: 2),
+      ),
+    );
   }
 
   void _sucesso(int idutilizador) {
@@ -79,14 +84,15 @@ class _RegEmailPageState extends State<RegEmailPage> {
     try {
       final created = await userService.createUser(widget.data);
       if (created == null) throw Exception('Failed to create user');
+
       widget.data.idutilizador = created;
       if (!mounted) return;
       _sucesso(created);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao guardar: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao guardar: $e')));
     } finally {
       if (mounted) setState(() => _guarda = false);
     }
@@ -141,7 +147,7 @@ class _RegEmailPageState extends State<RegEmailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(backgroundColor: Colors.transparent),
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -149,90 +155,224 @@ class _RegEmailPageState extends State<RegEmailPage> {
             fit: BoxFit.cover,
           ),
         ),
-        child: Column(
-          children: [
-            const SizedBox(height: 64),
-            Image.asset('images/logo2.png', width: 160),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _username,
-                            decoration: const InputDecoration(
-                              labelText: 'Nome de utilizador',
-                            ),
-                            validator: (v) => (v == null || v.trim().length < 6)
-                                ? 'mínimo 6 caracteres'
-                                : null,
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _email,
-                            decoration: const InputDecoration(
-                              labelText: 'Endereço de email',
-                            ),
-                            keyboardType: TextInputType.emailAddress,
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) return 'Indique o email';
-                              final re = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-                              return re.hasMatch(v.trim()) ? null : 'email inválido';
-                            },
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _password,
-                            decoration: const InputDecoration(labelText: 'Password'),
-                            obscureText: true,
-                            validator: (v) => (v == null || v.length < 8)
-                                ? 'mínimo 8 caracteres'
-                                : null,
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _confpassword,
-                            decoration: const InputDecoration(
-                              labelText: 'Confirmar password',
-                            ),
-                            obscureText: true,
-                            validator: (v) {
-                              if (v == null || v.isEmpty) return 'Confirme a password';
-                              if (v != _password.text) return 'As passwords não coincidem';
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 48),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              TextButton(
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.blue,
+        child: SafeArea(
+          child: Center(
+            child: SizedBox(
+              width: 520,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 6),
+                    Image.asset('images/logo2.png', width: 190),
+                    const SizedBox(height: 18),
+
+                    // Cabeçalho
+                    Card(
+                      elevation: 4,
+                      color: const Color(0xFFE3F2FD),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: const [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.person_add_alt_1,
+                                  color: Color(0xFF1565C0),
                                 ),
-                                onPressed: _guarda ? null : () => Navigator.pop(context),
-                                child: const Text('Anterior'),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    "Criar conta",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF0D47A1),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "Define o teu utilizador, email e password.",
+                              style: TextStyle(color: Color(0xFF0D47A1)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Form
+                    Card(
+                      elevation: 4,
+                      color: const Color(0xFFE3F2FD),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              TextFormField(
+                                controller: _username,
+                                decoration: _dec(
+                                  'Nome de utilizador',
+                                  Icons.person,
+                                ),
+                                textInputAction: TextInputAction.next,
+                                validator: (v) =>
+                                    (v == null || v.trim().length < 6)
+                                    ? 'mínimo 6 caracteres'
+                                    : null,
                               ),
-                              const SizedBox(width: 16),
-                              ElevatedButton(
-                                onPressed: _guarda ? null : _submit,
-                                child: Text(_guarda ? 'A guardar...' : 'Seguinte'),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _email,
+                                decoration: _dec(
+                                  'Endereço de email',
+                                  Icons.email_outlined,
+                                ),
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                validator: (v) {
+                                  if (v == null || v.trim().isEmpty) {
+                                    return 'Indique o email';
+                                  }
+                                  final re = RegExp(
+                                    r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                                  );
+                                  return re.hasMatch(v.trim())
+                                      ? null
+                                      : 'email inválido';
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _password,
+                                decoration: _dec(
+                                  'Password',
+                                  Icons.lock_outline,
+                                ),
+                                obscureText: true,
+                                textInputAction: TextInputAction.next,
+                                validator: (v) => (v == null || v.length < 8)
+                                    ? 'mínimo 8 caracteres'
+                                    : null,
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _confpassword,
+                                decoration: _dec(
+                                  'Confirmar password',
+                                  Icons.lock_reset_outlined,
+                                ),
+                                obscureText: true,
+                                textInputAction: TextInputAction.done,
+                                onFieldSubmitted: (_) =>
+                                    _guarda ? null : _submit(),
+                                validator: (v) {
+                                  if (v == null || v.isEmpty) {
+                                    return 'Confirme a password';
+                                  }
+                                  if (v != _password.text) {
+                                    return 'As passwords não coincidem';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Dica
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: const [
+                                    Icon(Icons.info_outline, size: 20),
+                                    SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'A password deve ter pelo menos 8 caracteres.',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 18),
+
+                              // Botões
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  TextButton.icon(
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: const Color(0xFF1565C0),
+                                    ),
+                                    onPressed: _guarda
+                                        ? null
+                                        : () => Navigator.pop(context),
+                                    icon: const Icon(Icons.arrow_back),
+                                    label: const Text('Anterior'),
+                                  ),
+                                  ElevatedButton.icon(
+                                    onPressed: _guarda ? null : _submit,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF1565C0),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 18,
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                    icon: _guarda
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Icon(Icons.arrow_forward),
+                                    label: Text(
+                                      _guarda ? 'A guardar...' : 'Seguinte',
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 18),
+                  ],
+                ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

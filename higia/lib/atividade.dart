@@ -36,7 +36,6 @@ class _ActividadeState extends State<atividade> {
   final List<String> registo = [];
 
   // Estimativa simples de calorias (muito aproximada)
-  // (baseado em "calorias por minuto" médio por tipo)
   double get caloriasPorMinuto {
     switch (tipoSelecionado) {
       case "Corrida":
@@ -45,8 +44,8 @@ class _ActividadeState extends State<atividade> {
         return 8.0;
       case "Alongamentos":
         return 3.0;
-      default: // Caminhada
-        return 5.0;
+      default:
+        return 5.0; // Caminhada
     }
   }
 
@@ -165,9 +164,14 @@ class _ActividadeState extends State<atividade> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 10),
-                    // troca o asset se tiveres outro ícone para atividade:
-                    // exemplo: images/atividade.png
-                    Center(child: Icon(Icons.directions_run, size: 70)),
+
+                    Center(
+                      child: Icon(
+                        Icons.directions_run,
+                        size: 70,
+                        color: const Color(0xFF1565C0),
+                      ),
+                    ),
                     const SizedBox(height: 12),
 
                     // Passos + progresso
@@ -180,13 +184,19 @@ class _ActividadeState extends State<atividade> {
                             style: const TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.w800,
+                              color: Color(0xFF0D47A1),
                             ),
                           ),
                           const SizedBox(height: 10),
-                          LinearProgressIndicator(value: progresso),
+                          LinearProgressIndicator(
+                            value: progresso,
+                            backgroundColor: Colors.white,
+                            color: const Color(0xFF1565C0),
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             "Objetivo: ${objetivoPassos.round()} • Faltam: $faltam",
+                            style: const TextStyle(color: Color(0xFF0D47A1)),
                           ),
                           const SizedBox(height: 12),
                           Wrap(
@@ -213,8 +223,14 @@ class _ActividadeState extends State<atividade> {
                               ),
                               TextButton.icon(
                                 onPressed: () => setState(() => passos = 0),
-                                icon: const Icon(Icons.refresh),
-                                label: const Text("Reset"),
+                                icon: const Icon(
+                                  Icons.refresh,
+                                  color: Color(0xFF1565C0),
+                                ),
+                                label: const Text(
+                                  "Reset",
+                                  style: TextStyle(color: Color(0xFF1565C0)),
+                                ),
                               ),
                             ],
                           ),
@@ -234,6 +250,7 @@ class _ActividadeState extends State<atividade> {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
+                              color: Color(0xFF0D47A1),
                             ),
                           ),
                           Slider(
@@ -259,7 +276,10 @@ class _ActividadeState extends State<atividade> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.fitness_center),
+                              const Icon(
+                                Icons.fitness_center,
+                                color: Color(0xFF1565C0),
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: DropdownButtonFormField<String>(
@@ -289,12 +309,13 @@ class _ActividadeState extends State<atividade> {
                               ),
                             ],
                           ),
-
                           const SizedBox(height: 12),
-
                           Row(
                             children: [
-                              const Icon(Icons.timer_outlined),
+                              const Icon(
+                                Icons.timer_outlined,
+                                color: Color(0xFF1565C0),
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: DropdownButtonFormField<int>(
@@ -327,15 +348,14 @@ class _ActividadeState extends State<atividade> {
                               ),
                             ],
                           ),
-
                           const SizedBox(height: 14),
-
                           Center(
                             child: Text(
                               formatar(restante),
                               style: const TextStyle(
                                 fontSize: 44,
                                 fontWeight: FontWeight.w800,
+                                color: Color(0xFF0D47A1),
                               ),
                             ),
                           ),
@@ -346,11 +366,11 @@ class _ActividadeState extends State<atividade> {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
+                                color: Color(0xFF0D47A1),
                               ),
                             ),
                           ),
                           const SizedBox(height: 14),
-
                           if (!aTreinar)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -393,6 +413,7 @@ class _ActividadeState extends State<atividade> {
                           ? const Text(
                               "Ainda não registaste nenhuma atividade.",
                               textAlign: TextAlign.center,
+                              style: TextStyle(color: Color(0xFF0D47A1)),
                             )
                           : ListView.separated(
                               shrinkWrap: true,
@@ -408,10 +429,19 @@ class _ActividadeState extends State<atividade> {
                                   ),
                                   leading: const Icon(
                                     Icons.check_circle_outline,
+                                    color: Color(0xFF1565C0),
                                   ),
-                                  title: Text(registo[i]),
+                                  title: Text(
+                                    registo[i],
+                                    style: const TextStyle(
+                                      color: Color(0xFF0D47A1),
+                                    ),
+                                  ),
                                   trailing: IconButton(
-                                    icon: const Icon(Icons.delete_outline),
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Color(0xFF1565C0),
+                                    ),
                                     onPressed: () =>
                                         setState(() => registo.removeAt(i)),
                                   ),
@@ -451,6 +481,8 @@ class _ActividadeState extends State<atividade> {
   }
 }
 
+// =================== CARD AZUL (IGUAL AO MENU) ===================
+
 class _CardSection extends StatelessWidget {
   final String title;
   final Widget child;
@@ -461,7 +493,7 @@ class _CardSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: Colors.white.withOpacity(0.85),
+      color: const Color(0xFFE3F2FD), // 🔵 azul claro
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -470,7 +502,11 @@ class _CardSection extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0D47A1),
+              ),
             ),
             const SizedBox(height: 12),
             child,
@@ -491,9 +527,11 @@ class _TipLine extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          const Icon(Icons.lightbulb_outline),
+          const Icon(Icons.lightbulb_outline, color: Color(0xFF1565C0)),
           const SizedBox(width: 10),
-          Expanded(child: Text(text)),
+          Expanded(
+            child: Text(text, style: const TextStyle(color: Color(0xFF0D47A1))),
+          ),
         ],
       ),
     );

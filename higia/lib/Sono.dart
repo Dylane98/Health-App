@@ -160,7 +160,10 @@ class _SonoState extends State<Sono> {
                       title: "Duração do sono",
                       child: Row(
                         children: [
-                          const Icon(Icons.bedtime_outlined),
+                          const Icon(
+                            Icons.bedtime_outlined,
+                            color: Color(0xFF1565C0),
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<int>(
@@ -207,6 +210,7 @@ class _SonoState extends State<Sono> {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
+                              color: Color(0xFF0D47A1),
                             ),
                           ),
                           Slider(
@@ -222,6 +226,7 @@ class _SonoState extends State<Sono> {
                           const Text(
                             "Escolhe antes de iniciar (fica registado no fim).",
                             textAlign: TextAlign.center,
+                            style: TextStyle(color: Color(0xFF0D47A1)),
                           ),
                         ],
                       ),
@@ -239,12 +244,16 @@ class _SonoState extends State<Sono> {
                             style: const TextStyle(
                               fontSize: 44,
                               fontWeight: FontWeight.bold,
+                              color: Color(0xFF0D47A1),
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Acordar às ${acordar.hour.toString().padLeft(2, '0')}:${acordar.minute.toString().padLeft(2, '0')}',
-                            style: const TextStyle(fontSize: 16),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF0D47A1),
+                            ),
                           ),
                           const SizedBox(height: 14),
 
@@ -285,6 +294,7 @@ class _SonoState extends State<Sono> {
                           ? const Text(
                               "Ainda não terminaste nenhuma sessão.",
                               textAlign: TextAlign.center,
+                              style: TextStyle(color: Color(0xFF0D47A1)),
                             )
                           : ListView.separated(
                               shrinkWrap: true,
@@ -298,12 +308,19 @@ class _SonoState extends State<Sono> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  title: Text(registoSono[i]),
+                                  title: Text(
+                                    registoSono[i],
+                                    style: const TextStyle(
+                                      color: Color(0xFF0D47A1),
+                                    ),
+                                  ),
                                   trailing: IconButton(
-                                    icon: const Icon(Icons.delete_outline),
-                                    onPressed: () {
-                                      setState(() => registoSono.removeAt(i));
-                                    },
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Color(0xFF1565C0),
+                                    ),
+                                    onPressed: () =>
+                                        setState(() => registoSono.removeAt(i)),
                                   ),
                                 );
                               },
@@ -339,6 +356,8 @@ class _SonoState extends State<Sono> {
   }
 }
 
+// =================== CARD AZUL (IGUAL AO MENU) ===================
+
 class _CardSection extends StatelessWidget {
   final String title;
   final Widget child;
@@ -349,7 +368,7 @@ class _CardSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: Colors.white.withOpacity(0.85),
+      color: const Color(0xFFE3F2FD), // 🔵 azul claro do menu
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -358,7 +377,11 @@ class _CardSection extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0D47A1),
+              ),
             ),
             const SizedBox(height: 12),
             child,
@@ -379,9 +402,11 @@ class _TipLine extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          const Icon(Icons.lightbulb_outline),
+          const Icon(Icons.lightbulb_outline, color: Color(0xFF1565C0)),
           const SizedBox(width: 10),
-          Expanded(child: Text(text)),
+          Expanded(
+            child: Text(text, style: const TextStyle(color: Color(0xFF0D47A1))),
+          ),
         ],
       ),
     );

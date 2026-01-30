@@ -60,11 +60,11 @@ class Menu extends StatelessWidget {
     );
   }
 
-  // ---------- TILES (IGUAIS AOS ORIGINAIS) ----------
-  Widget _buildTile(
-    BuildContext context, {
+  // ---------- TILE COM SOMBRA ----------
+  Widget _buildTile({
     required String asset,
-    required VoidCallback? onTap,
+    required VoidCallback onTap,
+    BoxFit fit = BoxFit.cover,
   }) {
     return Material(
       color: Colors.transparent,
@@ -75,7 +75,7 @@ class Menu extends StatelessWidget {
           width: 140,
           height: 140,
           decoration: BoxDecoration(
-            image: DecorationImage(image: AssetImage(asset), fit: BoxFit.cover),
+            image: DecorationImage(image: AssetImage(asset), fit: fit),
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
               BoxShadow(
@@ -84,28 +84,6 @@ class Menu extends StatelessWidget {
                 offset: Offset(0, 4),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTileWithoutShadow(
-    BuildContext context, {
-    required String asset,
-    required VoidCallback? onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: 140,
-          height: 140,
-          decoration: BoxDecoration(
-            image: DecorationImage(image: AssetImage(asset), fit: BoxFit.cover),
-            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -157,7 +135,7 @@ class Menu extends StatelessWidget {
 
                   const SizedBox(height: 35),
 
-                  // ---------- GRID ORIGINAL ----------
+                  // ---------- GRID ----------
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(
@@ -169,8 +147,7 @@ class Menu extends StatelessWidget {
                         spacing: 24,
                         runSpacing: 24,
                         children: [
-                          _buildTileWithoutShadow(
-                            context,
+                          _buildTile(
                             asset: 'images/passos.png',
                             onTap: () {
                               Navigator.push(
@@ -185,7 +162,6 @@ class Menu extends StatelessWidget {
                             },
                           ),
                           _buildTile(
-                            context,
                             asset: 'images/Saude.png',
                             onTap: () {
                               Navigator.push(
@@ -200,8 +176,9 @@ class Menu extends StatelessWidget {
                             },
                           ),
                           _buildTile(
-                            context,
                             asset: 'images/sono.png',
+                            fit: BoxFit
+                                .fill, // mantém o ícone do sono consistente
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -213,7 +190,6 @@ class Menu extends StatelessWidget {
                             },
                           ),
                           _buildTile(
-                            context,
                             asset: 'images/meditacao.png',
                             onTap: () {
                               Navigator.push(
@@ -226,7 +202,6 @@ class Menu extends StatelessWidget {
                             },
                           ),
                           _buildTile(
-                            context,
                             asset: 'images/alimentacao.png',
                             onTap: () {
                               Navigator.push(
@@ -239,7 +214,6 @@ class Menu extends StatelessWidget {
                             },
                           ),
                           _buildTile(
-                            context,
                             asset: 'images/atividade.png',
                             onTap: () {
                               Navigator.push(
