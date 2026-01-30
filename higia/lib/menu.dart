@@ -3,10 +3,10 @@ import 'package:higia/profile.dart';
 import 'package:higia/dadosRegisto.dart';
 import 'package:higia/relaxamento.dart';
 import 'package:higia/saude.dart';
-import 'Alimentacao.dart';
-import 'Passos.dart';
-import 'Sono.dart';
-import 'atividade.dart';
+import 'package:higia/Sono.dart';
+import 'package:higia/atividade.dart';
+import 'package:higia/Passos.dart';
+import 'package:higia/Alimentacao.dart';
 
 class Menu extends StatelessWidget {
   final RegistrationData reg = RegistrationData();
@@ -14,7 +14,58 @@ class Menu extends StatelessWidget {
 
   Menu({super.key, required this.idutilizador});
 
-  Widget _buildTile(BuildContext context, {required String asset, required VoidCallback? onTap}) {
+  // ---------- FRASE DE MOTIVAÇÃO ----------
+  String _fraseMotivacaoDoDia() {
+    final frases = [
+      "Pequenos passos todos os dias fazem a diferença.",
+      "Hoje é um bom dia para cuidares de ti.",
+      "Consistência é mais importante do que perfeição.",
+      "Respira fundo. Estás no caminho certo.",
+      "Faz algo hoje pelo teu bem-estar.",
+      "O teu corpo agradece cada escolha saudável.",
+      "Um dia de cada vez. Continua.",
+      "Mesmo pouco já é progresso.",
+      "A tua saúde é prioridade.",
+      "Cuida de ti como cuidarias de alguém que amas.",
+    ];
+
+    final now = DateTime.now();
+    final dayOfYear = now.difference(DateTime(now.year, 1, 1)).inDays;
+    return frases[dayOfYear % frases.length];
+  }
+
+  Widget _cardMotivacao() {
+    return Card(
+      elevation: 4,
+      color: const Color(0xFFE3F2FD),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            const Icon(Icons.auto_awesome, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _fraseMotivacaoDoDia(),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------- TILES (IGUAIS AOS ORIGINAIS) ----------
+  Widget _buildTile(
+    BuildContext context, {
+    required String asset,
+    required VoidCallback? onTap,
+  }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -26,12 +77,11 @@ class Menu extends StatelessWidget {
           decoration: BoxDecoration(
             image: DecorationImage(image: AssetImage(asset), fit: BoxFit.cover),
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: const Color(0x3F000000),
+                color: Color(0x3F000000),
                 blurRadius: 12,
-                offset: const Offset(0, 4),
-                spreadRadius: 0,
+                offset: Offset(0, 4),
               ),
             ],
           ),
@@ -40,7 +90,11 @@ class Menu extends StatelessWidget {
     );
   }
 
-  Widget _buildTileWithoutShadow(BuildContext context, {required String asset, required VoidCallback? onTap}) {
+  Widget _buildTileWithoutShadow(
+    BuildContext context, {
+    required String asset,
+    required VoidCallback? onTap,
+  }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -71,7 +125,9 @@ class Menu extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => Profile(idutilizador: idutilizador)),
+                MaterialPageRoute(
+                  builder: (_) => Profile(idutilizador: idutilizador),
+                ),
               );
             },
           ),
@@ -90,14 +146,24 @@ class Menu extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 700),
               child: Column(
                 children: [
-                  const SizedBox(height: 24),
-                  Image.asset('images/logo2.png', height: 70),
-                  const SizedBox(height: 20),
+                  Image.asset('images/logo2.png', height: 95),
+                  const SizedBox(height: 35),
 
-                  // Grid of tiles using Wrap for responsiveness
+                  // ⭐ FRASE DE MOTIVAÇÃO
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _cardMotivacao(),
+                  ),
+
+                  const SizedBox(height: 35),
+
+                  // ---------- GRID ORIGINAL ----------
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 16,
+                      ),
                       child: Wrap(
                         alignment: WrapAlignment.center,
                         spacing: 24,
@@ -109,7 +175,12 @@ class Menu extends StatelessWidget {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => Passos(data: reg, idutilizador: idutilizador,)),
+                                MaterialPageRoute(
+                                  builder: (_) => Passos(
+                                    data: reg,
+                                    idutilizador: idutilizador,
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -119,7 +190,12 @@ class Menu extends StatelessWidget {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => Saude(data: reg, idutilizador: idutilizador)),
+                                MaterialPageRoute(
+                                  builder: (_) => Saude(
+                                    data: reg,
+                                    idutilizador: idutilizador,
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -128,9 +204,12 @@ class Menu extends StatelessWidget {
                             asset: 'images/sono.png',
                             onTap: () {
                               Navigator.push(
-                                  context,
-                              MaterialPageRoute(builder: (_) => Sono(idutilizador: idutilizador))
-                                  );
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      Sono(idutilizador: idutilizador),
+                                ),
+                              );
                             },
                           ),
                           _buildTile(
@@ -138,8 +217,11 @@ class Menu extends StatelessWidget {
                             asset: 'images/meditacao.png',
                             onTap: () {
                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => Relaxamento(idutilizador: idutilizador))
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      Relaxamento(idutilizador: idutilizador),
+                                ),
                               );
                             },
                           ),
@@ -148,8 +230,11 @@ class Menu extends StatelessWidget {
                             asset: 'images/alimentacao.png',
                             onTap: () {
                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => Alimentacao(idutilizador: idutilizador))
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      Alimentacao(idutilizador: idutilizador),
+                                ),
                               );
                             },
                           ),
@@ -158,8 +243,11 @@ class Menu extends StatelessWidget {
                             asset: 'images/atividade.png',
                             onTap: () {
                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => atividade(idutilizador: idutilizador))
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      atividade(idutilizador: idutilizador),
+                                ),
                               );
                             },
                           ),

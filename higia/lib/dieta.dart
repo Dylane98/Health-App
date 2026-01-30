@@ -55,84 +55,83 @@ class _DietaState extends State<Dieta> {
           ),
         ),
         child: Center(
-            child: SizedBox(
-              width: 500,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'images/logo2.png',
-                    height: 60,
-                    width: 120,
-                  ),
-                  SizedBox(height: 32),
-                  const Text(
-                      'Indique o seu tipo de dieta',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 16),
+          child: SizedBox(
+            width: 500,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('images/logo2.png', height: 60, width: 120),
+                SizedBox(height: 32),
+                const Text(
+                  'Indique o seu tipo de dieta',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 16),
 
-                    CheckboxListTile(
-                      tristate: false,
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Alimentação variada'),
-                      value: alimentacaoVariada,
-                      onChanged: (v) => setState(() => alimentacaoVariada = v ?? false),
-                    ),
-                    CheckboxListTile(
-                      tristate: false,
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Vegetariano'),
-                      value: vegetariano,
-                      onChanged: (v) => setState(() => vegetariano = v ?? false),
-                    ),
-                    CheckboxListTile(
-                      tristate: false,
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Sem lactose'),
-                      value: semLactose,
-                      onChanged: (v) => setState(() => semLactose = v ?? false),
-                    ),
-                    CheckboxListTile(
-                      tristate: false,
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Sem glúten'),
-                      value: semGluten,
-                      onChanged: (v) => setState(() => semGluten = v ?? false),
-                    ),
-                    CheckboxListTile(
-                      tristate: false,
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Carne'),
-                      value: carne,
-                      onChanged: (v) => setState(() => carne = v ?? false),
-                    ),
-                    CheckboxListTile(
-                      tristate: false,
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Peixe'),
-                      value: peixe,
-                      onChanged: (v) => setState(() => peixe = v ?? false),
-                    ),
-                    SizedBox(height: 48),
-                    Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      TextButton(
+                CheckboxListTile(
+                  tristate: false,
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Alimentação variada'),
+                  value: alimentacaoVariada,
+                  onChanged: (v) =>
+                      setState(() => alimentacaoVariada = v ?? false),
+                ),
+                CheckboxListTile(
+                  tristate: false,
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Vegetariano'),
+                  value: vegetariano,
+                  onChanged: (v) => setState(() => vegetariano = v ?? false),
+                ),
+                CheckboxListTile(
+                  tristate: false,
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Sem lactose'),
+                  value: semLactose,
+                  onChanged: (v) => setState(() => semLactose = v ?? false),
+                ),
+                CheckboxListTile(
+                  tristate: false,
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Sem glúten'),
+                  value: semGluten,
+                  onChanged: (v) => setState(() => semGluten = v ?? false),
+                ),
+                CheckboxListTile(
+                  tristate: false,
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Carne'),
+                  value: carne,
+                  onChanged: (v) => setState(() => carne = v ?? false),
+                ),
+                CheckboxListTile(
+                  tristate: false,
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Peixe'),
+                  value: peixe,
+                  onChanged: (v) => setState(() => peixe = v ?? false),
+                ),
+                SizedBox(height: 48),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
                       style: TextButton.styleFrom(foregroundColor: Colors.blue),
                       onPressed: () => Navigator.pop(context),
                       child: const Text('Anterior'),
                     ),
                     ElevatedButton(
                       onPressed: _seguinte,
-                      style: ElevatedButton.styleFrom(foregroundColor: Colors.blue),
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                      ),
                       child: const Text('Seguinte'),
                     ),
-                    ],
-                  )
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
+          ),
         ),
       ),
     );

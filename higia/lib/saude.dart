@@ -1,18 +1,37 @@
-// dart
-// File: `higia/higia/lib/saude.dart` (changes)
-// - Guard against null Supabase client and use safe parsing
 import 'package:flutter/material.dart';
 import 'package:higia/dadosRegisto.dart';
 import 'package:higia/menu.dart';
 import 'package:higia/services/user_service.dart';
 
-class Saude extends StatelessWidget {
+class Saude extends StatefulWidget {
   final int idutilizador;
   final RegistrationData data;
 
-  Saude({super.key, required this.data, required this.idutilizador});
+  const Saude({super.key, required this.data, required this.idutilizador});
 
-  UserService get _userService => UserService();
+  @override
+  State<Saude> createState() => _SaudeState();
+}
+
+class _SaudeState extends State<Saude> {
+  final UserService _userService = UserService();
+
+  late Future<RegistrationData?> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _fetchRegistrationData();
+  }
+
+  Future<RegistrationData?> _fetchRegistrationData() =>
+      _userService.fetchUserData(widget.idutilizador);
+
+  void _recarregar() {
+    setState(() {
+      _future = _fetchRegistrationData();
+    });
+  }
 
   int _calcularIdade(DateTime? nascimento) {
     if (nascimento == null) return 0;
@@ -22,170 +41,291 @@ class Saude extends StatelessWidget {
         (today.month == nascimento.month && today.day < nascimento.day)) {
       age--;
     }
-    return age;
+    return age < 0 ? 0 : age;
   }
 
-  Future<RegistrationData?> _fetchRegistrationData() =>
-      _userService.fetchUserData(idutilizador);
+  String _fmtNum(dynamic v, {String sufixo = ""}) {
+    if (v == null) return "-";
+    final s = v.toString().trim();
+    if (s.isEmpty || s.toLowerCase() == "null") return "-";
+    return "$s$sufixo";
+  }
+
+  String _fmtTexto(dynamic v) {
+    if (v == null) return "-";
+    final s = v.toString().trim();
+    if (s.isEmpty || s.toLowerCase() == "null") return "-";
+    return s;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.home),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => Menu(idutilizador: idutilizador),
-                ),
-              );
-            },
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.home),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => Menu(idutilizador: widget.idutilizador),
+              ),
+            );
+          },
+        ),
+        actions: [
+          IconButton(
+            tooltip: "Atualizar",
+            onPressed: _recarregar,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('images/background2.png'),
+            fit: BoxFit.cover,
           ),
         ),
-        body: Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('images/background2.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: SafeArea(
-            child: Center(
-              child: SizedBox(
-                width: 500,
+        child: SafeArea(
+          child: Center(
+            child: SizedBox(
+              width: 520,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 60),
-                    Image.asset('images/Saude.png', height: 70),
-                    const SizedBox(height: 52),
-                    // ... (rest unchanged) ...
-                    Padding(
-                      padding: const EdgeInsets.only(left: 131),
-                      child: FutureBuilder<RegistrationData?>(
-                        future: _fetchRegistrationData(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white70,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const SizedBox(
-                                width: 60,
-                                height: 16,
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
+                    const SizedBox(height: 10),
+                    Center(child: Image.asset('images/Saude.png', height: 70)),
+                    const SizedBox(height: 18),
 
-                          final fetched = snapshot.data;
-                          final nascimento =
-                              fetched?.dataNascimento ?? data.dataNascimento;
-                          final idade = _calcularIdade(nascimento);
+                    FutureBuilder<RegistrationData?>(
+                      future: _future,
+                      builder: (context, snapshot) {
+                        // Loading
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const _LoadingCard();
+                        }
 
-                          final pesoText = (fetched?.peso ?? data.peso)
-                              .toString();
-                          final alturaText = (fetched?.altura ?? data.altura)
-                              .toString();
-                          final nivelText =
-                              (fetched?.nivelAtividadeDiaria ??
-                                      data.nivelAtividadeDiaria)
-                                  .toString();
-                          final atividadePreferida =
-                              (fetched?.AtividadePreferida ??
-                                      data.AtividadePreferida)
-                                  .toString();
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white70,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text('Idade: $idade anos'),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white70,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text('Peso: $pesoText kg'),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white70,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text('Altura: $alturaText cm'),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white70,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'Nível de atividade diária: $nivelText',
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white70,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'Atividade preferida: $atividadePreferida',
-                                ),
-                              ),
-                            ],
+                        // Erro
+                        if (snapshot.hasError) {
+                          return _ErrorCard(
+                            mensagem:
+                                "Não foi possível carregar os dados da BD.\nTenta novamente.",
+                            onRetry: _recarregar,
                           );
-                        },
-                      ),
+                        }
+
+                        // Dados (com fallback para os dados locais)
+                        final fetched = snapshot.data;
+                        final effective = fetched ?? widget.data;
+
+                        final nascimento = effective.dataNascimento;
+                        final idade = _calcularIdade(nascimento);
+
+                        final peso = _fmtNum(effective.peso, sufixo: " kg");
+                        final altura = _fmtNum(effective.altura, sufixo: " cm");
+                        final nivel = _fmtTexto(effective.nivelAtividadeDiaria);
+                        final preferida = _fmtTexto(
+                          effective.AtividadePreferida,
+                        );
+
+                        return Column(
+                          children: [
+                            _CardSection(
+                              title: "Resumo",
+                              child: Column(
+                                children: [
+                                  _InfoRow(
+                                    icon: Icons.cake_outlined,
+                                    label: "Idade",
+                                    value: idade == 0 ? "-" : "$idade anos",
+                                  ),
+                                  _InfoRow(
+                                    icon: Icons.monitor_weight_outlined,
+                                    label: "Peso",
+                                    value: peso,
+                                  ),
+                                  _InfoRow(
+                                    icon: Icons.height,
+                                    label: "Altura",
+                                    value: altura,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            _CardSection(
+                              title: "Atividade",
+                              child: Column(
+                                children: [
+                                  _InfoRow(
+                                    icon: Icons.directions_walk,
+                                    label: "Nível de atividade diária",
+                                    value: nivel,
+                                  ),
+                                  _InfoRow(
+                                    icon: Icons.favorite_outline,
+                                    label: "Atividade preferida",
+                                    value: preferida,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+
+                            // Widget extra: pequena dica contextual (sem BD extra)
+                            _CardSection(
+                              title: "Dica",
+                              child: Text(
+                                (nivel == "-" ||
+                                        nivel.toLowerCase() == "sedentário")
+                                    ? "Se passas muito tempo sentado, experimenta caminhar 10–15 min por dia."
+                                    : "Boa! Mantém uma rotina consistente e tenta alongar 2–3 min após a atividade.",
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
+
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CardSection extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _CardSection({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      color: Colors.white.withOpacity(0.85),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 12),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
+          Text(value, style: const TextStyle(fontSize: 16)),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoadingCard extends StatelessWidget {
+  const _LoadingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      color: Colors.white.withOpacity(0.85),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: const Padding(
+        padding: EdgeInsets.all(18),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 14),
+            Text("A carregar dados..."),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorCard extends StatelessWidget {
+  final String mensagem;
+  final VoidCallback onRetry;
+
+  const _ErrorCard({required this.mensagem, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      color: Colors.white.withOpacity(0.85),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, size: 36),
+            const SizedBox(height: 10),
+            Text(mensagem, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text("Tentar novamente"),
+            ),
+          ],
         ),
       ),
     );
